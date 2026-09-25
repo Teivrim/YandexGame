@@ -5,7 +5,7 @@
 | Проект | Жанр | Состояние |
 |---|---|---|
 | NEON//COURIER (корень репозитория) | аркада на выживание | опубликована на itch.io |
-| [NEON//BASTION](neon-bastion/README.md) | башенная оборона | 30 волн, готова к публикации |
+| [NEON//BASTION](neon-bastion/README.md) | башенная оборона | 30 волн, опубликована на itch.io |
 
 Архивы для загрузки: `neon-courier-yandex.zip` и `neon-bastion-itch.zip`.
 Ассеты для листингов: `yandex-assets/` и `bastion-assets/`.
