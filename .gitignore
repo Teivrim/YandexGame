@@ -1,5 +1,6 @@
-# Separate project kept alongside the game
+# Separate project and browser-source assets kept alongside the game
 vtuber-autopilot/
+public/
 
 # Local tooling
 node_modules/
