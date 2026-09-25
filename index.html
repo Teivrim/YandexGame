@@ -19,6 +19,7 @@
         <div class="logo-mark">NEON<span>//</span>COURIER</div>
         <div class="hud-stat"><span class="stat-label">СЧЁТ</span><strong id="scoreValue">000000</strong></div>
         <div class="hud-stat"><span class="stat-label">ВОЛНА</span><strong id="waveValue">01</strong></div>
+        <div class="hud-stat credit-hud"><span class="stat-label">КРЕДИТЫ</span><strong id="hudCreditsValue">000</strong></div>
       </div>
       <div class="hud-right">
         <div class="hud-stat health-stat"><span class="stat-label">КОРПУС</span><div id="healthPips" class="pips"></div></div>
@@ -34,10 +35,14 @@
 
     <section id="menu" class="screen menu-screen">
       <div class="menu-card">
-        <div class="eyebrow">АРКАДА НА ВЫЖИВАНИЕ // 01</div>
+        <div class="eyebrow">АРКАДА НА ВЫЖИВАНИЕ // 02</div>
         <h1>NEON<span>//</span><br>COURIER</h1>
         <p class="tagline">Забирай энергию. Не попадись дронам.<br>Продержись как можно дольше.</p>
         <button id="playButton" class="primary-button" type="button"><span>НАЧАТЬ СМЕНУ</span><b>→</b></button>
+        <div class="menu-actions">
+          <button id="shopButton" class="secondary-button" type="button"><span>МАГАЗИН</span><b id="menuCreditsValue">0 CR</b></button>
+          <button id="menuDailyButton" class="daily-mini-button" type="button">ЕЖЕДНЕВНЫЙ БОНУС // +80 CR</button>
+        </div>
         <div class="best-line">ЛУЧШИЙ РЕЗУЛЬТАТ <strong id="bestValue">000000</strong></div>
         <div class="controls-hint">
           <div><kbd>WASD</kbd><span>движение</span></div>
@@ -46,7 +51,7 @@
         </div>
         <div class="mobile-hint">На телефоне: джойстик слева, рывок справа</div>
       </div>
-      <div class="version-tag">v1.0 // BROWSER BUILD</div>
+      <div class="version-tag">v1.1 // PROGRESSION BUILD</div>
     </section>
 
     <section id="pauseScreen" class="screen pause-screen is-hidden">
@@ -55,6 +60,7 @@
         <h2>ПАУЗА</h2>
         <p>Смена приостановлена.</p>
         <button id="resumeButton" class="primary-button" type="button"><span>ПРОДОЛЖИТЬ</span><b>→</b></button>
+        <button id="pauseShopButton" class="text-button" type="button">Открыть магазин</button>
         <button id="quitButton" class="text-button" type="button">Выйти в меню</button>
       </div>
     </section>
@@ -66,9 +72,55 @@
         <div class="result-score"><span>ТВОЙ СЧЁТ</span><strong id="finalScore">000000</strong></div>
         <div class="result-row"><span>Время в сети</span><strong id="finalTime">00:00</strong></div>
         <div class="result-row"><span>Достигнутая волна</span><strong id="finalWave">01</strong></div>
+        <div class="result-row credits-row"><span>Кредиты за смену</span><strong id="runCredits">+0 CR</strong></div>
         <div class="new-record is-hidden" id="newRecord">НОВЫЙ РЕКОРД //</div>
         <button id="retryButton" class="primary-button" type="button"><span>ЕЩЁ РАЗ</span><b>↻</b></button>
+        <button id="resultShopButton" class="secondary-button full-width" type="button"><span>МАГАЗИН УЛУЧШЕНИЙ</span><b>＋</b></button>
         <button id="menuButton" class="text-button" type="button">В главное меню</button>
+      </div>
+    </section>
+
+    <section id="shop" class="screen shop-screen is-hidden" aria-labelledby="shopTitle">
+      <div class="shop-card">
+        <div class="shop-header">
+          <div>
+            <div class="eyebrow">АРСЕНАЛ // PERMANENT UPGRADES</div>
+            <h2 id="shopTitle">МАГАЗИН</h2>
+          </div>
+          <div class="wallet"><span>БАЛАНС</span><strong id="shopCreditsValue">0 CR</strong></div>
+        </div>
+        <p class="shop-copy">Улучшения сохраняются между сменами. Кредиты начисляются за любой завершённый забег.</p>
+        <div class="shop-grid">
+          <article class="upgrade-card" data-upgrade="armor">
+            <div class="upgrade-top"><span class="upgrade-icon icon-armor">▣</span><span class="upgrade-level">УР 0 / 3</span></div>
+            <h3>Бронекорпус</h3>
+            <p>+1 к максимальному корпусу.</p>
+            <div class="upgrade-bottom"><div class="level-track"><i></i><i></i><i></i></div><button class="buy-button" data-buy="armor" type="button">120 CR</button></div>
+          </article>
+          <article class="upgrade-card" data-upgrade="dash">
+            <div class="upgrade-top"><span class="upgrade-icon icon-dash">»</span><span class="upgrade-level">УР 0 / 3</span></div>
+            <h3>Ускоритель рывка</h3>
+            <p>−10% перезарядки и +длины фазы рывка.</p>
+            <div class="upgrade-bottom"><div class="level-track"><i></i><i></i><i></i></div><button class="buy-button" data-buy="dash" type="button">100 CR</button></div>
+          </article>
+          <article class="upgrade-card" data-upgrade="magnet">
+            <div class="upgrade-top"><span class="upgrade-icon icon-magnet">◎</span><span class="upgrade-level">УР 0 / 3</span></div>
+            <h3>Магнит</h3>
+            <p>Радиус притяжения энергии +25.</p>
+            <div class="upgrade-bottom"><div class="level-track"><i></i><i></i><i></i></div><button class="buy-button" data-buy="magnet" type="button">90 CR</button></div>
+          </article>
+          <article class="upgrade-card" data-upgrade="combo">
+            <div class="upgrade-top"><span class="upgrade-icon icon-combo">×</span><span class="upgrade-level">УР 0 / 3</span></div>
+            <h3>Комбо-ядро</h3>
+            <p>Комбо держится дольше и даёт больше очков.</p>
+            <div class="upgrade-bottom"><div class="level-track"><i></i><i></i><i></i></div><button class="buy-button" data-buy="combo" type="button">150 CR</button></div>
+          </article>
+        </div>
+        <div class="daily-panel">
+          <div><div class="eyebrow">ЕЖЕДНЕВНОЕ СНАБЖЕНИЕ</div><strong id="dailyStatus">Бонус доступен</strong></div>
+          <button id="dailyButton" class="daily-button" type="button">ЗАБРАТЬ +80 CR</button>
+        </div>
+        <div class="shop-footer"><span>Смены: <strong id="runCountValue">0</strong></span><button id="closeShopButton" class="primary-button compact" type="button"><span>НАЗАД</span><b>×</b></button></div>
       </div>
     </section>
 

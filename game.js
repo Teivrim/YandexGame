@@ -8,7 +8,20 @@
     menu: document.getElementById('menu'),
     pause: document.getElementById('pauseScreen'),
     gameover: document.getElementById('gameoverScreen'),
+    shop: document.getElementById('shop'),
     play: document.getElementById('playButton'),
+    shopButton: document.getElementById('shopButton'),
+    resultShopButton: document.getElementById('resultShopButton'),
+    pauseShopButton: document.getElementById('pauseShopButton'),
+    closeShopButton: document.getElementById('closeShopButton'),
+    menuCredits: document.getElementById('menuCreditsValue'),
+    shopCredits: document.getElementById('shopCreditsValue'),
+    hudCredits: document.getElementById('hudCreditsValue'),
+    dailyButton: document.getElementById('dailyButton'),
+    menuDailyButton: document.getElementById('menuDailyButton'),
+    dailyStatus: document.getElementById('dailyStatus'),
+    runCredits: document.getElementById('runCredits'),
+    runCount: document.getElementById('runCountValue'),
     retry: document.getElementById('retryButton'),
     resume: document.getElementById('resumeButton'),
     quit: document.getElementById('quitButton'),
@@ -46,6 +59,15 @@
     muted: '#8491b4'
   };
   const STORAGE_BEST = 'neon-courier-best-v1';
+  const STORAGE_PROFILE = 'neon-courier-profile-v1';
+  const DAILY_REWARD = 80;
+  const DAILY_INTERVAL = 24 * 60 * 60 * 1000;
+  const SHOP_ITEMS = {
+    armor: { name: 'Бронекорпус', maxLevel: 3, costs: [120, 280, 520] },
+    dash: { name: 'Ускоритель рывка', maxLevel: 3, costs: [100, 240, 440] },
+    magnet: { name: 'Магнит', maxLevel: 3, costs: [90, 210, 390] },
+    combo: { name: 'Комбо-ядро', maxLevel: 3, costs: [150, 300, 540] }
+  };
   const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   let viewport = { w: 800, h: 600 };
@@ -55,6 +77,8 @@
   let uiClock = 0;
   let toastTimeout = 0;
   let soundEnabled = true;
+  let profile = loadProfile();
+  let shopReturnMode = 'menu';
   let game = createGame();
   const stars = createStars();
   const input = {
@@ -69,6 +93,7 @@
   };
 
   function createPlayer() {
+    const maxHp = getMaxHp();
     return {
       x: WORLD.w / 2,
       y: WORLD.h / 2,
@@ -76,8 +101,8 @@
       vx: 0,
       vy: 0,
       angle: -Math.PI / 2,
-      hp: 3,
-      maxHp: 3,
+      hp: maxHp,
+      maxHp,
       dashTime: 0,
       dashCooldown: 0,
       dashDirX: 1,
@@ -179,6 +204,79 @@
     } catch (error) {
       // Local storage can be disabled in an embedded browser. The game still works.
     }
+  }
+
+  function safeInteger(value, fallback = 0, min = 0, max = Number.MAX_SAFE_INTEGER) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return fallback;
+    return Math.round(clamp(number, min, max));
+  }
+
+  function loadProfile() {
+    const defaultProfile = {
+      credits: 0,
+      totalRuns: 0,
+      totalCredits: 0,
+      dailyClaimedAt: 0,
+      upgrades: { armor: 0, dash: 0, magnet: 0, combo: 0 }
+    };
+    try {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_PROFILE) || 'null');
+      if (!stored || typeof stored !== 'object') return defaultProfile;
+      const upgrades = {};
+      Object.keys(SHOP_ITEMS).forEach((id) => {
+        upgrades[id] = safeInteger(stored.upgrades?.[id], 0, 0, SHOP_ITEMS[id].maxLevel);
+      });
+      return {
+        credits: safeInteger(stored.credits, 0, 0),
+        totalRuns: safeInteger(stored.totalRuns, 0, 0),
+        totalCredits: safeInteger(stored.totalCredits, 0, 0),
+        dailyClaimedAt: safeInteger(stored.dailyClaimedAt, 0, 0),
+        upgrades
+      };
+    } catch (error) {
+      return defaultProfile;
+    }
+  }
+
+  function saveProfile() {
+    try {
+      localStorage.setItem(STORAGE_PROFILE, JSON.stringify(profile));
+    } catch (error) {
+      // The run remains playable when storage is unavailable.
+    }
+  }
+
+  function getUpgrade(id) {
+    return profile.upgrades[id] || 0;
+  }
+
+  function getMaxHp() {
+    return 3 + getUpgrade('armor');
+  }
+
+  function getDashCooldown() {
+    return DASH_COOLDOWN * Math.max(0.7, 1 - getUpgrade('dash') * 0.1);
+  }
+
+  function getMagnetRadius() {
+    return 32 + getUpgrade('magnet') * 25;
+  }
+
+  function getComboWindow() {
+    return 2.5 + getUpgrade('combo') * 0.35;
+  }
+
+  function getMaxCombo() {
+    return 5 + getUpgrade('combo');
+  }
+
+  function getRunCredits(score) {
+    return Math.max(1, Math.floor(score / 10));
+  }
+
+  function formatCredits(value) {
+    return `${Math.max(0, Math.floor(value))} CR`;
   }
 
   function pointIsBlocked(x, y, padding = 0) {
@@ -300,6 +398,7 @@
     els.menu.classList.add('is-hidden');
     els.pause.classList.add('is-hidden');
     els.gameover.classList.add('is-hidden');
+    els.shop.classList.add('is-hidden');
     els.hud.classList.remove('is-hidden');
     showToast('СМЕНА НАЧАЛАСЬ // СОБИРАЙ ЭНЕРГИЮ');
     updateHud(true);
@@ -315,8 +414,10 @@
     els.hud.classList.add('is-hidden');
     els.pause.classList.add('is-hidden');
     els.gameover.classList.add('is-hidden');
+    els.shop.classList.add('is-hidden');
     els.menu.classList.remove('is-hidden');
     updateBest();
+    updateProfileUi();
     updateHud(true);
   }
 
@@ -345,11 +446,17 @@
     game.mode = 'gameover';
     const finalScore = Math.floor(game.score);
     const previousBest = getBest();
+    const earnedCredits = getRunCredits(finalScore);
     game.newRecord = finalScore > previousBest;
     if (game.newRecord) saveBest(finalScore);
+    profile.credits += earnedCredits;
+    profile.totalCredits += earnedCredits;
+    profile.totalRuns += 1;
+    saveProfile();
     els.finalScore.textContent = formatScore(finalScore);
     els.finalTime.textContent = formatTime(game.time);
     els.finalWave.textContent = String(game.wave).padStart(2, '0');
+    els.runCredits.textContent = `+${earnedCredits} CR`;
     els.newRecord.classList.toggle('is-hidden', !game.newRecord);
     els.gameover.classList.remove('is-hidden');
     input.keys.clear();
@@ -361,11 +468,114 @@
     game.shake = 18;
     tone(120, 0.4, 'sawtooth', 0.05, -70);
     updateBest();
+    updateProfileUi();
     updateHud(true);
   }
 
   function updateBest() {
     els.best.textContent = formatScore(getBest());
+  }
+
+  function getDailyRemaining() {
+    return Math.max(0, DAILY_INTERVAL - (Date.now() - profile.dailyClaimedAt));
+  }
+
+  function formatCountdown(milliseconds) {
+    const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+
+  function updateProfileUi() {
+    const credits = Math.floor(profile.credits);
+    const dailyRemaining = getDailyRemaining();
+    const dailyReady = dailyRemaining <= 0;
+    const creditText = formatCredits(credits);
+    if (els.menuCredits) els.menuCredits.textContent = creditText;
+    if (els.shopCredits) els.shopCredits.textContent = creditText;
+    if (els.hudCredits) els.hudCredits.textContent = String(credits).padStart(3, '0');
+    if (els.runCount) els.runCount.textContent = String(profile.totalRuns);
+    if (els.dailyStatus) els.dailyStatus.textContent = dailyReady ? 'Бонус доступен' : `Перезарядка ${formatCountdown(dailyRemaining)}`;
+    if (els.dailyButton) {
+      els.dailyButton.disabled = !dailyReady;
+      els.dailyButton.textContent = dailyReady ? `ЗАБРАТЬ +${DAILY_REWARD} CR` : 'БОНУС УЖЕ ПОЛУЧЕН';
+    }
+    if (els.menuDailyButton) {
+      els.menuDailyButton.disabled = !dailyReady;
+      els.menuDailyButton.textContent = dailyReady ? `ЕЖЕДНЕВНЫЙ БОНУС // +${DAILY_REWARD} CR` : `БОНУС ЧЕРЕЗ ${formatCountdown(dailyRemaining)}`;
+    }
+    renderShop();
+  }
+
+  function renderShop() {
+    document.querySelectorAll('.upgrade-card[data-upgrade]').forEach((card) => {
+      const id = card.dataset.upgrade;
+      const item = SHOP_ITEMS[id];
+      if (!item) return;
+      const level = getUpgrade(id);
+      const maxed = level >= item.maxLevel;
+      const cost = maxed ? 0 : item.costs[level];
+      const levelLabel = card.querySelector('.upgrade-level');
+      const buyButton = card.querySelector('[data-buy]');
+      const levelBars = card.querySelectorAll('.level-track i');
+      if (levelLabel) levelLabel.textContent = `УР ${level} / ${item.maxLevel}`;
+      levelBars.forEach((bar, index) => bar.classList.toggle('active', index < level));
+      if (buyButton) {
+        buyButton.disabled = maxed;
+        buyButton.classList.toggle('poor', !maxed && profile.credits < cost);
+        buyButton.textContent = maxed ? 'МАКС' : `${cost} CR`;
+      }
+    });
+  }
+
+  function buyUpgrade(id) {
+    const item = SHOP_ITEMS[id];
+    if (!item) return;
+    const level = getUpgrade(id);
+    if (level >= item.maxLevel) {
+      showToast('УЛУЧШЕНИЕ УЖЕ МАКСИМАЛЬНОЕ');
+      return;
+    }
+    const cost = item.costs[level];
+    if (profile.credits < cost) {
+      showToast(`НУЖНО ЕЩЁ ${cost - Math.floor(profile.credits)} CR`);
+      tone(110, 0.12, 'square', 0.025, -25);
+      return;
+    }
+    profile.credits -= cost;
+    profile.upgrades[id] = level + 1;
+    saveProfile();
+    updateProfileUi();
+    showToast(`${item.name.toUpperCase()} // УРОВЕНЬ ${level + 1}`);
+    tone(330 + level * 70, 0.16, 'sine', 0.04, 220);
+  }
+
+  function claimDailyReward() {
+    if (getDailyRemaining() > 0) {
+      showToast('ЕЖЕДНЕВНЫЙ БОНУС УЖЕ ПОЛУЧЕН');
+      return;
+    }
+    profile.credits += DAILY_REWARD;
+    profile.totalCredits += DAILY_REWARD;
+    profile.dailyClaimedAt = Date.now();
+    saveProfile();
+    updateProfileUi();
+    showToast(`СНАБЖЕНИЕ ПОЛУЧЕНО // +${DAILY_REWARD} CR`);
+    tone(280, 0.2, 'sine', 0.04, 340);
+  }
+
+  function openShop(returnMode = game.mode) {
+    if (game.mode === 'playing') return;
+    shopReturnMode = returnMode;
+    els.shop.classList.remove('is-hidden');
+    updateProfileUi();
+  }
+
+  function closeShop() {
+    els.shop.classList.add('is-hidden');
+    if (shopReturnMode === 'paused' && game.mode === 'paused') els.pause.classList.remove('is-hidden');
   }
 
   function getMoveVector() {
@@ -399,8 +609,8 @@
       player.dashDirX = Math.cos(player.angle);
       player.dashDirY = Math.sin(player.angle);
     }
-    player.dashTime = 0.19;
-    player.dashCooldown = DASH_COOLDOWN * (player.overdrive > 0 ? 0.72 : 1);
+    player.dashTime = 0.19 + getUpgrade('dash') * 0.018;
+    player.dashCooldown = getDashCooldown() * (player.overdrive > 0 ? 0.72 : 1);
     player.invuln = Math.max(player.invuln, 0.3);
     player.trailClock = 0;
     burst(player.x, player.y, COLORS.pink, 9, 105, 0.32);
@@ -571,8 +781,9 @@
       const dx = player.x - pickup.x;
       const dy = player.y - pickup.y;
       let distance = Math.hypot(dx, dy);
-      if (player.overdrive > 0 && distance < 155) {
-        const pull = 370 * dt;
+      const magnetRadius = getMagnetRadius() + (player.overdrive > 0 ? 120 : 0);
+      if (distance < magnetRadius) {
+        const pull = (player.overdrive > 0 ? 370 : 105) * dt;
         pickup.x += dx / Math.max(distance, 1) * pull;
         pickup.y += dy / Math.max(distance, 1) * pull;
         distance = Math.hypot(player.x - pickup.x, player.y - pickup.y);
@@ -635,9 +846,10 @@
   function collectPickup(pickup) {
     const player = game.player;
     if (pickup.kind === 'energy') {
-      game.comboClock = 2.5;
-      game.combo = game.combo > 0 ? Math.min(5, game.combo + 1) : 1;
-      const value = 10 * game.combo * (player.overdrive > 0 ? 2 : 1);
+      game.comboClock = getComboWindow();
+      game.combo = game.combo > 0 ? Math.min(getMaxCombo(), game.combo + 1) : 1;
+      const comboBonus = 1 + getUpgrade('combo') * 0.12;
+      const value = Math.round(10 * game.combo * comboBonus * (player.overdrive > 0 ? 2 : 1));
       game.score += value;
       addText(`+${value}`, pickup.x, pickup.y - 10, game.combo > 1 ? COLORS.orange : COLORS.cyanBright);
       burst(pickup.x, pickup.y, pickup.color, 6, 65, 0.3);
@@ -766,6 +978,7 @@
     els.score.textContent = formatScore(game.score);
     els.wave.textContent = String(game.wave).padStart(2, '0');
     els.time.textContent = formatTime(game.time);
+    if (els.hudCredits) els.hudCredits.textContent = String(Math.floor(profile.credits)).padStart(3, '0');
     const healthRatio = clamp(player.hp / player.maxHp, 0, 1);
     if (els.health.childElementCount !== player.maxHp) {
       els.health.innerHTML = '';
@@ -776,7 +989,7 @@
       }
     }
     [...els.health.children].forEach((pip, index) => pip.classList.toggle('empty', index >= healthRatio));
-    const dashReady = 1 - clamp(player.dashCooldown / (DASH_COOLDOWN * (player.overdrive > 0 ? 0.72 : 1)), 0, 1);
+    const dashReady = 1 - clamp(player.dashCooldown / (getDashCooldown() * (player.overdrive > 0 ? 0.72 : 1)), 0, 1);
     els.dashFill.style.transform = `scaleX(${dashReady})`;
     els.dashButton.classList.toggle('cooling', player.dashCooldown > 0);
     const effects = [];
@@ -857,11 +1070,14 @@
       const movementKeys = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'ShiftLeft', 'ShiftRight'];
       if (movementKeys.includes(code)) event.preventDefault();
       if (code === 'Escape') {
-        if (game.mode === 'playing') pauseGame();
+        if (!els.shop.classList.contains('is-hidden')) {
+          event.preventDefault();
+          closeShop();
+        } else if (game.mode === 'playing') pauseGame();
         else if (game.mode === 'paused') resumeGame();
         return;
       }
-      if (code === 'Enter' && (game.mode === 'menu' || game.mode === 'gameover')) {
+      if (code === 'Enter' && els.shop.classList.contains('is-hidden') && (game.mode === 'menu' || game.mode === 'gameover')) {
         event.preventDefault();
         startGame();
         return;
@@ -913,6 +1129,15 @@
     els.pauseButton.addEventListener('click', pauseGame);
     els.quit.addEventListener('click', returnToMenu);
     els.menuButton.addEventListener('click', returnToMenu);
+    els.shopButton.addEventListener('click', () => openShop('menu'));
+    els.resultShopButton.addEventListener('click', () => openShop('gameover'));
+    els.pauseShopButton.addEventListener('click', () => openShop('paused'));
+    els.closeShopButton.addEventListener('click', closeShop);
+    els.dailyButton.addEventListener('click', claimDailyReward);
+    els.menuDailyButton.addEventListener('click', claimDailyReward);
+    document.querySelectorAll('[data-buy]').forEach((button) => {
+      button.addEventListener('click', () => buyUpgrade(button.dataset.buy));
+    });
     els.soundButton.addEventListener('click', () => {
       soundEnabled = !soundEnabled;
       els.soundButton.textContent = soundEnabled ? '◖))' : '◖×';
@@ -1262,6 +1487,7 @@
       uiClock -= dt;
       if (uiClock <= 0) {
         updateHud();
+        updateProfileUi();
         uiClock = 0.1;
       }
     }
@@ -1273,6 +1499,7 @@
   setupInput();
   resizeCanvas();
   updateBest();
+  updateProfileUi();
   updateHud(true);
   requestAnimationFrame(frame);
 })();
