@@ -1,0 +1,10 @@
+# Separate project kept alongside the game
+vtuber-autopilot/
+
+# Local tooling
+node_modules/
+.env
+*.log
+.DS_Store
+.vscode/
+.idea/
