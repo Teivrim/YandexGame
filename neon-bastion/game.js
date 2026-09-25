@@ -16,6 +16,8 @@
     towerCards: document.getElementById('towerCards'),
     startWaveButton: document.getElementById('startWaveButton'),
     prepTimer: document.getElementById('prepTimer'),
+    repairButton: document.getElementById('repairButton'),
+    repairCost: document.getElementById('repairCost'),
     selectionPanel: document.getElementById('selectionPanel'),
     selectionIcon: document.getElementById('selectionIcon'),
     selectionName: document.getElementById('selectionName'),
@@ -104,27 +106,27 @@
   const TOWERS = {
     pulse: {
       name: 'Импульс', glyph: '◉', color: COLORS.cyan, cost: 60,
-      damage: 13, rate: 1.35, range: 118, shot: 'bolt',
+      damage: 13, rate: 1.35, range: 153, shot: 'bolt',
       desc: 'Быстрая одиночная стрельба по самому близкому к базе врагу.'
     },
     mortar: {
       name: 'Мортира', glyph: '◎', color: COLORS.orange, cost: 130,
-      damage: 34, rate: 0.5, range: 168, shot: 'shell', splash: 62,
+      damage: 34, rate: 0.5, range: 218, shot: 'shell', splash: 62,
       desc: 'Навесной выстрел, накрывает площадь. Медленная, но бьёт по толпе.'
     },
     cryo: {
       name: 'Криозар', glyph: '❄', color: COLORS.green, cost: 100,
-      damage: 5, rate: 0.9, range: 124, shot: 'bolt', slow: 0.42, slowTime: 1.8,
+      damage: 5, rate: 0.9, range: 161, shot: 'bolt', slow: 0.42, slowTime: 1.8,
       desc: 'Слабый урон, но сильно замедляет всё в радиусе.'
     },
     tesla: {
       name: 'Генератор', glyph: '⚡', color: COLORS.violet, cost: 165,
-      damage: 20, rate: 0.8, range: 132, shot: 'chain', chain: 4, locked: 'tesla',
+      damage: 20, rate: 0.8, range: 172, shot: 'chain', chain: 4, locked: 'tesla',
       desc: 'Разряд перескакивает на 4 цели. Пробивает броню наполовину.'
     },
     rail: {
       name: 'Рельсотрон', glyph: '▤', color: COLORS.pink, cost: 240,
-      damage: 82, rate: 0.32, range: 300, shot: 'beam', pierce: true, locked: 'rail',
+      damage: 82, rate: 0.32, range: 390, shot: 'beam', pierce: true, locked: 'rail',
       desc: 'Дальний рельсовый выстрел проходит сквозь всех на линии.'
     }
   };
@@ -283,11 +285,35 @@
   }
 
   function getStartingCredits() {
-    return 220 + getUpgrade('starter') * 60;
+    return 450 + getUpgrade('starter') * 60;
   }
 
   function getBaseHp() {
-    return 20 + getUpgrade('core') * 5;
+    return 30 + getUpgrade('core') * 5;
+  }
+
+  // Ремонт базы между волнами: цена растёт с каждым восстановленным пунктом,
+  // поэтому кредиты всегда находят применение, а не копятся.
+  function repairCost() {
+    const missing = game.baseMaxHp - game.baseHp;
+    if (missing <= 0) return Infinity;
+    return 18 * missing + Math.round(game.wave * 3);
+  }
+
+  function repairBase() {
+    if (game.mode !== 'prep') return;
+    const cost = repairCost();
+    if (!Number.isFinite(cost) || game.credits < cost) return;
+    game.credits -= cost;
+    game.baseHp = game.baseMaxHp;
+    spawnBurst(
+      pathPoints[pathPoints.length - 1].x,
+      pathPoints[pathPoints.length - 1].y,
+      COLORS.green, 22, 170
+    );
+    tone(300, 0.18, 'triangle', 0.04, 340);
+    showToast('БАЗА ВОССТАНОВЛЕНА');
+    updateHud();
   }
 
   function getDamageBonus() {
@@ -393,7 +419,9 @@
   }
 
   function waveHpScale(number) {
-    return 1 + (number - 1) * 0.11;
+    // линейный рост: при ×0.07 к 30-й волне множитель всего 3.03,
+    // иначе HP обгоняет DPS игрока и поздние волны становятся непроходимыми
+    return 1 + (number - 1) * 0.07;
   }
 
   function startWave() {
@@ -417,7 +445,7 @@
   }
 
   function finishWave() {
-    const reward = 20 + game.wave * 5;
+    const reward = 35 + game.wave * 8;
     game.credits += reward;
     game.earnedThisRun += reward;
     tone(520, 0.16, 'triangle', 0.04, 260);
@@ -1102,8 +1130,20 @@
       els.startWaveButton.querySelector('span').textContent = game.mode === 'wave' ? 'ВОЛНА ИДЁТ' : 'ПАУЗА';
       els.prepTimer.textContent = enemiesRemaining() + ' ВРАГОВ';
     }
+    updateRepairButton();
     updateTowerCards();
     updateSelectionPanel();
+  }
+
+  function updateRepairButton() {
+    if (!els.repairButton) return;
+    const cost = repairCost();
+    const ready = game.mode === 'prep' && Number.isFinite(cost);
+    els.repairButton.classList.toggle('is-hidden', !ready);
+    if (!ready) return;
+    els.repairButton.disabled = game.credits < cost;
+    els.repairCost.textContent = cost + ' CR';
+    els.repairButton.title = 'Восстановить базу до ' + game.baseMaxHp + ' HP';
   }
 
   function buildTowerCards() {
@@ -1372,6 +1412,11 @@
     els.startWaveButton.addEventListener('click', () => {
       ensureAudio();
       startWave();
+    });
+
+    els.repairButton.addEventListener('click', () => {
+      ensureAudio();
+      repairBase();
     });
 
     els.upgradeTowerButton.addEventListener('click', () => {
@@ -1978,5 +2023,41 @@
   resizeCanvas();
   updateProfileUi();
   updateHud();
+
+  // Отладочный доступ по адресу вида index.html?debug — позволяет проверять
+  // внутреннее состояние из консоли и автотестов. В обычном запуске не включается.
+  if (/[?&]debug\b/.test(window.location.search)) {
+    window.__bastion = {
+      state: () => ({
+        mode: game.mode,
+        paused: game.paused,
+        wave: game.wave,
+        speed,
+        enemies: game.enemies.length,
+        firstEnemy: game.enemies[0]
+          ? {
+              type: game.enemies[0].type,
+              seg: game.enemies[0].segment,
+              segT: game.enemies[0].segT,
+              x: game.enemies[0].x,
+              y: game.enemies[0].y,
+              speed: game.enemies[0].speed
+            }
+          : null,
+        pathPoints: pathPoints.length,
+        baseHp: game.baseHp,
+        credits: game.credits,
+        time: game.time
+      }),
+      damage: (amount) => {
+        game.baseHp = Math.max(0, game.baseHp - amount);
+        updateHud();
+      },
+      setSpeed: (value) => {
+        speed = value;
+      }
+    };
+  }
+
   requestAnimationFrame(frame);
 })();

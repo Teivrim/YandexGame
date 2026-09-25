@@ -32,9 +32,14 @@
 
     <section id="buildBar" class="build-bar is-hidden" aria-label="Панель башен">
       <div id="towerCards" class="tower-cards"></div>
-      <button id="startWaveButton" class="start-wave-button" type="button">
-        <span>НАЧАТЬ ВОЛНУ</span><b id="prepTimer">25</b>
-      </button>
+      <div class="build-bar-side">
+        <button id="repairButton" class="repair-button" type="button">
+          <span>РЕМОНТ БАЗЫ</span><b id="repairCost">—</b>
+        </button>
+        <button id="startWaveButton" class="start-wave-button" type="button">
+          <span>НАЧАТЬ ВОЛНУ</span><b id="prepTimer">25</b>
+        </button>
+      </div>
     </section>
 
     <section id="selectionPanel" class="selection-panel is-hidden" aria-label="Выбранная башня">

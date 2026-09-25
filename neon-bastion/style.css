@@ -431,6 +431,46 @@ button {
   transform: none;
 }
 
+.build-bar-side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.repair-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  color: var(--cyan-bright);
+  cursor: pointer;
+  background: rgba(99, 231, 255, 0.08);
+  border: 1px solid rgba(99, 231, 255, 0.32);
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.repair-button b {
+  color: var(--orange);
+  font-size: 10px;
+}
+
+.repair-button:hover:not(:disabled) {
+  background: rgba(99, 231, 255, 0.18);
+  border-color: var(--cyan);
+  transform: translateY(-2px);
+}
+
+.repair-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* ---------- selection panel ---------- */
 .selection-panel {
   position: absolute;
@@ -1244,8 +1284,19 @@ kbd {
     font-size: 8px;
   }
 
+  .build-bar-side {
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .repair-button {
+    flex: 1;
+    justify-content: center;
+  }
+
   .start-wave-button {
     min-width: 0;
+    flex: 1;
     flex-direction: row;
     gap: 9px;
     padding: 10px 14px;
