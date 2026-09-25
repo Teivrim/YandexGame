@@ -64,8 +64,12 @@ try {
 if ($LASTEXITCODE -ne 0) { throw "zipalign failed" }
 
 Write-Host "6/6 sign" -ForegroundColor Cyan
-$keystore = "$out\release.keystore"
+# Signing keystore lives NEXT TO THIS SCRIPT, not in the temp build dir.
+# RuStore forbids changing the signing key: an update signed with a different
+# key is rejected, so the keystore must survive every rebuild.
+$keystore = Join-Path $PSScriptRoot "bastion-release.keystore"
 if (-not (Test-Path $keystore)) {
+  Write-Host "   keystore not found, generating a new one" -ForegroundColor Yellow
   & "$jdk\bin\keytool.exe" -genkeypair -v `
     -keystore $keystore `
     -storepass bastion2026 -keypass bastion2026 `
@@ -73,6 +77,7 @@ if (-not (Test-Path $keystore)) {
     -keyalg RSA -keysize 2048 -validity 10950 `
     -dname "CN=NEON BASTION, OU=Teivrim, O=Teivrim, C=RU"
   if ($LASTEXITCODE -ne 0) { throw "keytool failed" }
+  Write-Host "   IMPORTANT: back this file up. RuStore updates require the same key." -ForegroundColor Yellow
 }
 
 $signedApk = "$out\NEON-BASTION-signed.apk"

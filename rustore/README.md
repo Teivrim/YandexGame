@@ -6,6 +6,10 @@
 |---|---|
 | `NEON-BASTION-1.0.0.apk` | Подписанная сборка для загрузки |
 | `bastion-release.keystore` | Ключ подписи — **сохранить**, без него нельзя выпустить обновление |
+| `MainActivity.java` | Обёртка WebView |
+| `AndroidManifest.xml` | Манифест |
+| `build-apk.ps1` | Сборка в шесть шагов без Gradle |
+| `build-apk-bundle.js` | Сборка игры в один ES5-файл для assets |
 
 Пароль от keystore: `bastion2026`, alias: `bastion`.
 
@@ -19,8 +23,8 @@ minSdk        21 (Android 5.0)
 targetSdk     34 (Android 14)
 label         NEON//BASTION
 orientation   sensorLandscape
-размер APK    140134 байт (0.13 МБ)
-SHA-256       cb06e78f601a882172dbbc6b9a5c6baaf0820e639b9fac27cb010eb8941d6882
+размер APK    144230 байт (0.14 МБ)
+SHA-256       c016b774a24e9ae24ffb4d71a6fa6fe9d3e117e65f3a9689542cfbf481f0b2e6
 ```
 
 Подпись: сертификат `CN=NEON BASTION, OU=Teivrim, O=Teivrim, C=RU`,
@@ -83,5 +87,32 @@ NEON//BASTION — неоновый башенный оборонец на 30 в�
 шагов без Gradle: `aapt2 compile` → `aapt2 link` → `javac` → `d8` →
 `zipalign` → `apksigner`.
 
+Ключ подписи лежит рядом со скриптом, а не во временной папке сборки: в
+RuStore смена ключа запрещена, и обновление, подписанное другим ключом,
+не примут.
+
+```bash
+# 1. собрать игру в один ES5-файл для assets
+npm install @babel/core @babel/cli @babel/preset-env
+node build-apk-bundle.js ../neon-bastion assets/index.html
+
+# 2. собрать и подписать APK
+powershell -ExecutionPolicy Bypass -File build-apk.ps1
+```
+
 Игра в APK лежит одним файлом `assets/index.html` со встроенными CSS и JS,
 поэтому не зависит от файловой системы и работает офлайн.
+
+## Совместимость со старыми WebView
+
+minSdk 21 — это Android 5.0 с системным WebView на Chrome 37, где нет ни
+стрелочных функций, ни `for..of`, ни `Set`/`Map`, ни `String.padStart`.
+На российских устройствах без Google-сервисов WebView часто остаётся старым,
+и обычная сборка падала бы с SyntaxError прямо на запуске.
+
+Поэтому `build-apk-bundle.js` транспилирует `game.js` через Babel в ES5 и
+добавляет polyfill для `Number.isFinite`, `padStart`, `Array.includes`,
+`Object.assign`, `Math.trunc`, `Map` и `Set`. Скрипт падает с ошибкой, если
+после сборки остались стрелки или внешние ссылки на отдельные файлы.
+
+Веб-версия на itch.io остаётся на современном JS — там старых движков нет.

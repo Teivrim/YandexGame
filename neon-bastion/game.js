@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
   'use strict';
 
   const canvas = document.getElementById('gameCanvas');
@@ -67,7 +67,7 @@
     toast: document.getElementById('toast')
   };
 
-  // ---------- константы ----------
+  // ---------- РєРѕРЅСЃС‚Р°РЅС‚С‹ ----------
   const COLS = 22;
   const ROWS = 13;
   const TILE = 48;
@@ -105,50 +105,50 @@
 
   const TOWERS = {
     pulse: {
-      name: 'Импульс', glyph: '◉', color: COLORS.cyan, cost: 60,
+      name: 'РРјРїСѓР»СЊСЃ', glyph: 'в—‰', color: COLORS.cyan, cost: 60,
       damage: 13, rate: 1.35, range: 153, shot: 'bolt',
-      desc: 'Быстрая одиночная стрельба по самому близкому к базе врагу.'
+      desc: 'Р‘С‹СЃС‚СЂР°СЏ РѕРґРёРЅРѕС‡РЅР°СЏ СЃС‚СЂРµР»СЊР±Р° РїРѕ СЃР°РјРѕРјСѓ Р±Р»РёР·РєРѕРјСѓ Рє Р±Р°Р·Рµ РІСЂР°РіСѓ.'
     },
     mortar: {
-      name: 'Мортира', glyph: '◎', color: COLORS.orange, cost: 130,
+      name: 'РњРѕСЂС‚РёСЂР°', glyph: 'в—Ћ', color: COLORS.orange, cost: 130,
       damage: 34, rate: 0.5, range: 218, shot: 'shell', splash: 62,
-      desc: 'Навесной выстрел, накрывает площадь. Медленная, но бьёт по толпе.'
+      desc: 'РќР°РІРµСЃРЅРѕР№ РІС‹СЃС‚СЂРµР», РЅР°РєСЂС‹РІР°РµС‚ РїР»РѕС‰Р°РґСЊ. РњРµРґР»РµРЅРЅР°СЏ, РЅРѕ Р±СЊС‘С‚ РїРѕ С‚РѕР»РїРµ.'
     },
     cryo: {
-      name: 'Криозар', glyph: '❄', color: COLORS.green, cost: 100,
+      name: 'РљСЂРёРѕР·Р°СЂ', glyph: 'вќ„', color: COLORS.green, cost: 100,
       damage: 5, rate: 0.9, range: 161, shot: 'bolt', slow: 0.42, slowTime: 1.8,
-      desc: 'Слабый урон, но сильно замедляет всё в радиусе.'
+      desc: 'РЎР»Р°Р±С‹Р№ СѓСЂРѕРЅ, РЅРѕ СЃРёР»СЊРЅРѕ Р·Р°РјРµРґР»СЏРµС‚ РІСЃС‘ РІ СЂР°РґРёСѓСЃРµ.'
     },
     tesla: {
-      name: 'Генератор', glyph: '⚡', color: COLORS.violet, cost: 165,
+      name: 'Р“РµРЅРµСЂР°С‚РѕСЂ', glyph: 'вљЎ', color: COLORS.violet, cost: 165,
       damage: 20, rate: 0.8, range: 172, shot: 'chain', chain: 4, locked: 'tesla',
-      desc: 'Разряд перескакивает на 4 цели. Пробивает броню наполовину.'
+      desc: 'Р Р°Р·СЂСЏРґ РїРµСЂРµСЃРєР°РєРёРІР°РµС‚ РЅР° 4 С†РµР»Рё. РџСЂРѕР±РёРІР°РµС‚ Р±СЂРѕРЅСЋ РЅР°РїРѕР»РѕРІРёРЅСѓ.'
     },
     rail: {
-      name: 'Рельсотрон', glyph: '▤', color: COLORS.pink, cost: 240,
+      name: 'Р РµР»СЊСЃРѕС‚СЂРѕРЅ', glyph: 'в–¤', color: COLORS.pink, cost: 240,
       damage: 82, rate: 0.32, range: 390, shot: 'beam', pierce: true, locked: 'rail',
-      desc: 'Дальний рельсовый выстрел проходит сквозь всех на линии.'
+      desc: 'Р”Р°Р»СЊРЅРёР№ СЂРµР»СЊСЃРѕРІС‹Р№ РІС‹СЃС‚СЂРµР» РїСЂРѕС…РѕРґРёС‚ СЃРєРІРѕР·СЊ РІСЃРµС… РЅР° Р»РёРЅРёРё.'
     }
   };
 
   const TOWER_ORDER = ['pulse', 'mortar', 'cryo', 'tesla', 'rail'];
 
   const ENEMIES = {
-    drone: { name: 'Дрон', hp: 46, speed: 54, reward: 7, color: COLORS.pink, r: 12, shape: 'hex' },
-    scout: { name: 'Скаут', hp: 30, speed: 104, reward: 9, color: COLORS.cyan, r: 10, shape: 'tri' },
-    armor: { name: 'Бронетрак', hp: 190, speed: 34, reward: 19, color: COLORS.orange, r: 15, shape: 'square', armor: 5 },
-    wraith: { name: 'Фазер', hp: 84, speed: 68, reward: 15, color: COLORS.violet, r: 12, shape: 'diamond', noSlow: true },
-    splitter: { name: 'Делитель', hp: 110, speed: 48, reward: 14, color: COLORS.green, r: 13, shape: 'cluster', splitInto: 'drone', splitCount: 2 },
-    boss: { name: 'Титан', hp: 1250, speed: 26, reward: 120, color: COLORS.red, r: 27, shape: 'boss', armor: 10, boss: true, leak: 5 }
+    drone: { name: 'Р”СЂРѕРЅ', hp: 46, speed: 54, reward: 7, color: COLORS.pink, r: 12, shape: 'hex' },
+    scout: { name: 'РЎРєР°СѓС‚', hp: 30, speed: 104, reward: 9, color: COLORS.cyan, r: 10, shape: 'tri' },
+    armor: { name: 'Р‘СЂРѕРЅРµС‚СЂР°Рє', hp: 190, speed: 34, reward: 19, color: COLORS.orange, r: 15, shape: 'square', armor: 5 },
+    wraith: { name: 'Р¤Р°Р·РµСЂ', hp: 84, speed: 68, reward: 15, color: COLORS.violet, r: 12, shape: 'diamond', noSlow: true },
+    splitter: { name: 'Р”РµР»РёС‚РµР»СЊ', hp: 110, speed: 48, reward: 14, color: COLORS.green, r: 13, shape: 'cluster', splitInto: 'drone', splitCount: 2 },
+    boss: { name: 'РўРёС‚Р°РЅ', hp: 1250, speed: 26, reward: 120, color: COLORS.red, r: 27, shape: 'boss', armor: 10, boss: true, leak: 5 }
   };
 
   const SHOP_ITEMS = {
-    starter: { name: 'Стабилизатор', maxLevel: 3, costs: [140, 320, 600] },
-    damage: { name: 'Резонансное ядро', maxLevel: 3, costs: [180, 400, 720] },
-    rate: { name: 'Автомат заряда', maxLevel: 3, costs: [160, 360, 660] },
-    core: { name: 'Бронеклапан', maxLevel: 3, costs: [150, 340, 620] },
-    tesla: { name: 'Генератор', maxLevel: 1, costs: [400] },
-    rail: { name: 'Рельсотрон', maxLevel: 1, costs: [550] }
+    starter: { name: 'РЎС‚Р°Р±РёР»РёР·Р°С‚РѕСЂ', maxLevel: 3, costs: [140, 320, 600] },
+    damage: { name: 'Р РµР·РѕРЅР°РЅСЃРЅРѕРµ СЏРґСЂРѕ', maxLevel: 3, costs: [180, 400, 720] },
+    rate: { name: 'РђРІС‚РѕРјР°С‚ Р·Р°СЂСЏРґР°', maxLevel: 3, costs: [160, 360, 660] },
+    core: { name: 'Р‘СЂРѕРЅРµРєР»Р°РїР°РЅ', maxLevel: 3, costs: [150, 340, 620] },
+    tesla: { name: 'Р“РµРЅРµСЂР°С‚РѕСЂ', maxLevel: 1, costs: [400] },
+    rail: { name: 'Р РµР»СЊСЃРѕС‚СЂРѕРЅ', maxLevel: 1, costs: [550] }
   };
 
   const STORAGE_BEST = 'neon-bastion-best-v1';
@@ -157,7 +157,7 @@
   const DAILY_INTERVAL = 24 * 60 * 60 * 1000;
   const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // ---------- состояние ----------
+  // ---------- СЃРѕСЃС‚РѕСЏРЅРёРµ ----------
   let viewport = { w: 800, h: 600 };
   let dpr = 1;
   let lastFrame = performance.now();
@@ -173,13 +173,13 @@
   let selectedTowerId = null;
   let hoverTile = null;
   let bannerTimeout = 0;
-  // отступы под HUD сверху и под панель башен снизу; снизу измеряем по факту
+  // РѕС‚СЃС‚СѓРїС‹ РїРѕРґ HUD СЃРІРµСЂС…Сѓ Рё РїРѕРґ РїР°РЅРµР»СЊ Р±Р°С€РµРЅ СЃРЅРёР·Сѓ; СЃРЅРёР·Сѓ РёР·РјРµСЂСЏРµРј РїРѕ С„Р°РєС‚Сѓ
   const uiInsets = { top: 60, bottom: 132 };
 
   const audio = { context: null, master: null };
   const stars = createStars();
 
-  // ---------- сетка и поле ----------
+  // ---------- СЃРµС‚РєР° Рё РїРѕР»Рµ ----------
   const roadTiles = new Set();
   const blockedTiles = new Set();
   const pathPoints = [];
@@ -206,7 +206,7 @@
       }
     }
 
-    // зона вокруг базы и спавна строить нельзя
+    // Р·РѕРЅР° РІРѕРєСЂСѓРі Р±Р°Р·С‹ Рё СЃРїР°РІРЅР° СЃС‚СЂРѕРёС‚СЊ РЅРµР»СЊР·СЏ
     const core = PATH_NODES[PATH_NODES.length - 1];
     for (let dy = -1; dy <= 1; dy++) {
       for (let dx = -1; dx <= 1; dx++) {
@@ -243,7 +243,7 @@
     return result;
   }
 
-  // ---------- профиль ----------
+  // ---------- РїСЂРѕС„РёР»СЊ ----------
   function safeInteger(value, fallback = 0, min = 0, max = Number.MAX_SAFE_INTEGER) {
     const number = Number(value);
     if (!Number.isFinite(number)) return fallback;
@@ -276,7 +276,7 @@
     try {
       localStorage.setItem(STORAGE_PROFILE, JSON.stringify(profile));
     } catch (error) {
-      /* приватный режим — молча игнорируем */
+      /* РїСЂРёРІР°С‚РЅС‹Р№ СЂРµР¶РёРј вЂ” РјРѕР»С‡Р° РёРіРЅРѕСЂРёСЂСѓРµРј */
     }
   }
 
@@ -292,8 +292,8 @@
     return 30 + getUpgrade('core') * 5;
   }
 
-  // Ремонт базы между волнами: цена растёт с каждым восстановленным пунктом,
-  // поэтому кредиты всегда находят применение, а не копятся.
+  // Р РµРјРѕРЅС‚ Р±Р°Р·С‹ РјРµР¶РґСѓ РІРѕР»РЅР°РјРё: С†РµРЅР° СЂР°СЃС‚С‘С‚ СЃ РєР°Р¶РґС‹Рј РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРЅС‹Рј РїСѓРЅРєС‚РѕРј,
+  // РїРѕСЌС‚РѕРјСѓ РєСЂРµРґРёС‚С‹ РІСЃРµРіРґР° РЅР°С…РѕРґСЏС‚ РїСЂРёРјРµРЅРµРЅРёРµ, Р° РЅРµ РєРѕРїСЏС‚СЃСЏ.
   function repairCost() {
     const missing = game.baseMaxHp - game.baseHp;
     if (missing <= 0) return Infinity;
@@ -312,7 +312,7 @@
       COLORS.green, 22, 170
     );
     tone(300, 0.18, 'triangle', 0.04, 340);
-    showToast('БАЗА ВОССТАНОВЛЕНА');
+    showToast('Р‘РђР—Рђ Р’РћРЎРЎРўРђРќРћР’Р›Р•РќРђ');
     updateHud();
   }
 
@@ -334,7 +334,7 @@
     return Math.max(profile.bestWave, safeInteger(localStorage.getItem(STORAGE_BEST), 0, 0, TOTAL_WAVES));
   }
 
-  // ---------- игра ----------
+  // ---------- РёРіСЂР° ----------
   function createGame() {
     return {
       mode: 'menu',
@@ -397,7 +397,7 @@
     updateHud();
   }
 
-  // ---------- волны ----------
+  // ---------- РІРѕР»РЅС‹ ----------
   function buildWave(number) {
     const spawns = [];
     const add = (type, count, gap, start) => {
@@ -419,8 +419,8 @@
   }
 
   function waveHpScale(number) {
-    // линейный рост: при ×0.07 к 30-й волне множитель всего 3.03,
-    // иначе HP обгоняет DPS игрока и поздние волны становятся непроходимыми
+    // Р»РёРЅРµР№РЅС‹Р№ СЂРѕСЃС‚: РїСЂРё Г—0.07 Рє 30-Р№ РІРѕР»РЅРµ РјРЅРѕР¶РёС‚РµР»СЊ РІСЃРµРіРѕ 3.03,
+    // РёРЅР°С‡Рµ HP РѕР±РіРѕРЅСЏРµС‚ DPS РёРіСЂРѕРєР° Рё РїРѕР·РґРЅРёРµ РІРѕР»РЅС‹ СЃС‚Р°РЅРѕРІСЏС‚СЃСЏ РЅРµРїСЂРѕС…РѕРґРёРјС‹РјРё
     return 1 + (number - 1) * 0.07;
   }
 
@@ -430,7 +430,7 @@
     if (bonus > 0) {
       game.credits += bonus;
       game.earnedThisRun += bonus;
-      showToast('ДОСРОЧНЫЙ СТАРТ +' + bonus + ' CR');
+      showToast('Р”РћРЎР РћР§РќР«Р™ РЎРўРђР Рў +' + bonus + ' CR');
       tone(700, 0.12, 'triangle', 0.04, 320);
     }
     game.wave += 1;
@@ -439,7 +439,7 @@
     game.waveClock = 0;
     game.mode = 'wave';
     const isBoss = game.wave % 5 === 0;
-    showBanner(isBoss ? 'ВОЛНА ' + game.wave + ' // БОСС' : 'ВОЛНА ' + game.wave, isBoss);
+    showBanner(isBoss ? 'Р’РћР›РќРђ ' + game.wave + ' // Р‘РћРЎРЎ' : 'Р’РћР›РќРђ ' + game.wave, isBoss);
     tone(150, 0.18, 'sine', 0.05, 300);
     updateHud();
   }
@@ -457,11 +457,11 @@
     game.prepClock = PREP_TIME;
     game.spawnQueue = [];
     game.spawnIndex = 0;
-    showToast('ВОЛНА ' + game.wave + ' ОТБИТА +' + reward + ' CR');
+    showToast('Р’РћР›РќРђ ' + game.wave + ' РћРўР‘РРўРђ +' + reward + ' CR');
     updateHud();
   }
 
-  // ---------- враги ----------
+  // ---------- РІСЂР°РіРё ----------
   function spawnEnemy(type) {
     const def = ENEMIES[type];
     if (!def) return;
@@ -615,7 +615,7 @@
     };
   }
 
-  // ---------- башни ----------
+  // ---------- Р±Р°С€РЅРё ----------
   function towerStats(type, level) {
     const def = TOWERS[type];
     return {
@@ -677,7 +677,7 @@
     tower.buildAnim = 0.4;
     spawnBurst(tower.x, tower.y, TOWERS[tower.type].color, 18, 150);
     tone(620, 0.12, 'triangle', 0.035, 240);
-    showToast(TOWERS[tower.type].name + ' УР ' + tower.level);
+    showToast(TOWERS[tower.type].name + ' РЈР  ' + tower.level);
     return true;
   }
 
@@ -688,7 +688,7 @@
     game.towers = game.towers.filter((t) => t !== tower);
     selectedTowerId = null;
     tone(220, 0.1, 'sine', 0.03, -80);
-    showToast('ПРОДАНО +' + value + ' CR');
+    showToast('РџР РћР”РђРќРћ +' + value + ' CR');
   }
 
   function findTarget(tower, range) {
@@ -839,7 +839,7 @@
     return best;
   }
 
-  // ---------- снаряды ----------
+  // ---------- СЃРЅР°СЂСЏРґС‹ ----------
   function updateProjectiles(dt) {
     for (const p of game.projectiles) {
       p.life -= dt;
@@ -922,7 +922,7 @@
     }
   }
 
-  // ---------- частицы и текст ----------
+  // ---------- С‡Р°СЃС‚РёС†С‹ Рё С‚РµРєСЃС‚ ----------
   function spawnBurst(x, y, color, count, force) {
     if (reducedMotion) count = Math.min(count, 6);
     for (let i = 0; i < count; i++) {
@@ -964,7 +964,7 @@
     game.floats = game.floats.filter((f) => f.life > 0);
   }
 
-  // ---------- обновление ----------
+  // ---------- РѕР±РЅРѕРІР»РµРЅРёРµ ----------
   function update(dt) {
     if (game.paused || game.mode === 'menu') return;
     const step = dt * speed;
@@ -1012,7 +1012,7 @@
     return pending + game.enemies.length;
   }
 
-  // ---------- конец игры ----------
+  // ---------- РєРѕРЅРµС† РёРіСЂС‹ ----------
   function endGame(won) {
     game.mode = won ? 'win' : 'over';
     const previousBest = getBest();
@@ -1022,7 +1022,7 @@
       try {
         localStorage.setItem(STORAGE_BEST, String(reached));
       } catch (error) {
-        /* игнорируем */
+        /* РёРіРЅРѕСЂРёСЂСѓРµРј */
       }
     }
     profile.runs += 1;
@@ -1036,7 +1036,7 @@
       showScreen(els.winScreen);
       tone(520, 0.3, 'triangle', 0.05, 400);
     } else {
-      els.finalWave.textContent = String(Math.max(1, game.wave)).padStart(2, '0');
+      els.finalWave.textContent = padStartCompat(Math.max(1, game.wave), 2);
       els.finalKills.textContent = String(game.kills);
       els.finalTowers.textContent = String(game.towersBuilt);
       els.runCredits.textContent = '+' + game.earnedThisRun + ' CR';
@@ -1066,14 +1066,14 @@
     els.hud.classList.remove('is-hidden');
     els.buildBar.classList.remove('is-hidden');
     updateUiInsets();
-    showBanner('ОБОРОНА НАЧАЛАСЬ');
+    showBanner('РћР‘РћР РћРќРђ РќРђР§РђР›РђРЎР¬');
     tone(160, 0.18, 'sine', 0.04, 300);
     updateHud();
-    // поле широкое: в портретной ориентации советуем повернуть устройство
-    if (viewport.h > viewport.w) window.setTimeout(() => showToast('СОВЕТ: ПОВЕРНИ УСТРОЙСТВО ГОРИЗОНТАЛЬНО'), 1700);
+    // РїРѕР»Рµ С€РёСЂРѕРєРѕРµ: РІ РїРѕСЂС‚СЂРµС‚РЅРѕР№ РѕСЂРёРµРЅС‚Р°С†РёРё СЃРѕРІРµС‚СѓРµРј РїРѕРІРµСЂРЅСѓС‚СЊ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ
+    if (viewport.h > viewport.w) window.setTimeout(() => showToast('РЎРћР’Р•Рў: РџРћР’Р•Р РќР РЈРЎРўР РћР™РЎРўР’Рћ Р“РћР РР—РћРќРўРђР›Р¬РќРћ'), 1700);
   }
 
-  // ---------- интерфейс ----------
+  // ---------- РёРЅС‚РµСЂС„РµР№СЃ ----------
   function showScreen(node) {
     hideAllScreens();
     if (node) node.classList.remove('is-hidden');
@@ -1101,7 +1101,7 @@
   function updatePips() {
     const total = game.baseMaxHp;
     const ratio = total ? game.baseHp / total : 0;
-    // на узких экранах показываем меньше пипсов и всегда дублируем числом
+    // РЅР° СѓР·РєРёС… СЌРєСЂР°РЅР°С… РїРѕРєР°Р·С‹РІР°РµРј РјРµРЅСЊС€Рµ РїРёРїСЃРѕРІ Рё РІСЃРµРіРґР° РґСѓР±Р»РёСЂСѓРµРј С‡РёСЃР»РѕРј
     const maxShown = Math.min(total, viewport.w <= 520 ? 6 : viewport.w <= 820 ? 10 : 20);
     const filledCount = Math.ceil(ratio * maxShown);
     let html = '';
@@ -1115,24 +1115,33 @@
   }
 
   function updateHud() {
-    els.waveValue.textContent = String(Math.max(1, game.wave)).padStart(2, '0');
+    els.waveValue.textContent = padStartCompat(Math.max(1, game.wave), 2);
     els.waveTotal.textContent = '/' + TOTAL_WAVES;
     els.creditsValue.textContent = String(game.credits);
-    els.enemyCountValue.textContent = String(enemiesRemaining()).padStart(2, '0');
+    els.enemyCountValue.textContent = padStartCompat(enemiesRemaining(), 2);
     updatePips();
 
     if (game.mode === 'prep') {
       els.startWaveButton.classList.remove('combat');
-      els.startWaveButton.querySelector('span').textContent = 'НАЧАТЬ ВОЛНУ ' + (game.wave + 1);
-      els.prepTimer.textContent = Math.ceil(game.prepClock) + 'с · +' + Math.max(0, Math.floor(game.prepClock) * 2) + ' CR';
+      els.startWaveButton.querySelector('span').textContent = 'РќРђР§РђРўР¬ Р’РћР›РќРЈ ' + (game.wave + 1);
+      els.prepTimer.textContent = Math.ceil(game.prepClock) + 'СЃ В· +' + Math.max(0, Math.floor(game.prepClock) * 2) + ' CR';
     } else {
       els.startWaveButton.classList.add('combat');
-      els.startWaveButton.querySelector('span').textContent = game.mode === 'wave' ? 'ВОЛНА ИДЁТ' : 'ПАУЗА';
-      els.prepTimer.textContent = enemiesRemaining() + ' ВРАГОВ';
+      els.startWaveButton.querySelector('span').textContent = game.mode === 'wave' ? 'Р’РћР›РќРђ РР”РЃРў' : 'РџРђРЈР—Рђ';
+      els.prepTimer.textContent = enemiesRemaining() + ' Р’Р РђР“РћР’';
     }
     updateRepairButton();
     updateTowerCards();
     updateSelectionPanel();
+  }
+
+  // РЎРІРѕР№ Р·Р°РїРѕР»РЅРёС‚РµР»СЊ РІРјРµСЃС‚Рѕ String.prototype.padStart: С‚РѕРіРѕ РјРµС‚РѕРґР° РЅРµС‚ РІ
+  // СЃС‚Р°СЂС‹С… СЃРёСЃС‚РµРјРЅС‹С… WebView, Р° РЅР° Android 5.x Р±РµР· Google-СЃРµСЂРІРёСЃРѕРІ WebView
+  // РѕСЃС‚Р°С‘С‚СЃСЏ СЃС‚Р°СЂС‹Рј, Рё РёРіСЂР° РїР°РґР°Р»Р° Р±С‹ СЃ TypeError РїСЂСЏРјРѕ РІ HUD.
+  function padStartCompat(value, length) {
+    let out = String(value);
+    while (out.length < length) out = '0' + out;
+    return out;
   }
 
   function updateRepairButton() {
@@ -1143,7 +1152,7 @@
     if (!ready) return;
     els.repairButton.disabled = game.credits < cost;
     els.repairCost.textContent = cost + ' CR';
-    els.repairButton.title = 'Восстановить базу до ' + game.baseMaxHp + ' HP';
+    els.repairButton.title = 'Р’РѕСЃСЃС‚Р°РЅРѕРІРёС‚СЊ Р±Р°Р·Сѓ РґРѕ ' + game.baseMaxHp + ' HP';
   }
 
   function buildTowerCards() {
@@ -1168,7 +1177,7 @@
       card.classList.toggle('poor', unlocked && poor);
       card.classList.toggle('selected', selectedBuildType === type && !selectedTowerId);
       const cost = card.querySelector('.tower-cost');
-      cost.textContent = unlocked ? def.cost + ' CR' : 'ЗАКРЫТО';
+      cost.textContent = unlocked ? def.cost + ' CR' : 'Р—РђРљР Р«РўРћ';
     }
   }
 
@@ -1184,7 +1193,7 @@
     els.selectionIcon.textContent = def.glyph;
     els.selectionIcon.style.background = def.color;
     els.selectionName.textContent = def.name;
-    els.selectionLevel.textContent = 'УРОВЕНЬ ' + tower.level + ' / ' + MAX_TOWER_LEVEL;
+    els.selectionLevel.textContent = 'РЈР РћР’Р•РќР¬ ' + tower.level + ' / ' + MAX_TOWER_LEVEL;
     els.selectionDamage.textContent = String(Math.round(stats.damage));
     els.selectionRange.textContent = String(Math.round(stats.range));
     els.selectionLevelStat.textContent = String(tower.level);
@@ -1192,7 +1201,7 @@
     const cost = towerUpgradeCost(tower);
     const canUpgrade = Number.isFinite(cost) && game.credits >= cost;
     els.upgradeTowerButton.disabled = !canUpgrade;
-    els.upgradeTowerCost.textContent = Number.isFinite(cost) ? cost + ' CR' : 'МАКС';
+    els.upgradeTowerCost.textContent = Number.isFinite(cost) ? cost + ' CR' : 'РњРђРљРЎ';
     els.sellTowerValue.textContent = '+' + Math.floor(towerTotalSpent(tower) * 0.6) + ' CR';
   }
 
@@ -1202,7 +1211,7 @@
     els.menuCreditsValue.textContent = formatted;
     els.shopCreditsValue.textContent = formatted;
     els.runCountValue.textContent = String(profile.runs);
-    els.bestValue.textContent = String(getBest()).padStart(2, '0');
+    els.bestValue.textContent = padStartCompat(getBest(), 2);
     updateDailyUi();
     renderShop();
   }
@@ -1213,16 +1222,16 @@
 
   function updateDailyUi() {
     const available = dailyAvailable();
-    els.dailyStatus.textContent = available ? 'Бонус доступен' : 'Бонус уже получен. Приходи завтра.';
+    els.dailyStatus.textContent = available ? 'Р‘РѕРЅСѓСЃ РґРѕСЃС‚СѓРїРµРЅ' : 'Р‘РѕРЅСѓСЃ СѓР¶Рµ РїРѕР»СѓС‡РµРЅ. РџСЂРёС…РѕРґРё Р·Р°РІС‚СЂР°.';
     els.dailyButton.disabled = !available;
-    els.dailyButton.textContent = available ? 'ЗАБРАТЬ +' + DAILY_REWARD + ' CR' : 'ПОЛУЧЕНО';
+    els.dailyButton.textContent = available ? 'Р—РђР‘Р РђРўР¬ +' + DAILY_REWARD + ' CR' : 'РџРћР›РЈР§Р•РќРћ';
     els.menuDailyButton.disabled = !available;
-    els.menuDailyButton.textContent = available ? 'ЕЖЕДНЕВНЫЙ БОНУС // +' + DAILY_REWARD + ' CR' : 'БОНУС ПОЛУЧЕН // ЖДЁМ ЗАВТРА';
+    els.menuDailyButton.textContent = available ? 'Р•Р–Р•Р”РќР•Р’РќР«Р™ Р‘РћРќРЈРЎ // +' + DAILY_REWARD + ' CR' : 'Р‘РћРќРЈРЎ РџРћР›РЈР§Р•Рќ // Р–Р”РЃРњ Р—РђР’РўР Рђ';
   }
 
   function claimDaily(target) {
     if (!dailyAvailable()) {
-      showToast('БОНУС УЖЕ ПОЛУЧЕН');
+      showToast('Р‘РћРќРЈРЎ РЈР–Р• РџРћР›РЈР§Р•Рќ');
       return;
     }
     profile.credits += DAILY_REWARD;
@@ -1246,10 +1255,10 @@
       const button = card.querySelector('.buy-button');
       const track = card.querySelectorAll('.level-track i');
 
-      levelLabel.textContent = maxed ? 'МАКС' : 'УР ' + level + ' / ' + item.maxLevel;
+      levelLabel.textContent = maxed ? 'РњРђРљРЎ' : 'РЈР  ' + level + ' / ' + item.maxLevel;
       track.forEach((i, index) => i.classList.toggle('on', index < level));
       card.classList.toggle('maxed', maxed);
-      button.textContent = maxed ? 'ОТКРЫТО' : cost + ' CR';
+      button.textContent = maxed ? 'РћРўРљР Р«РўРћ' : cost + ' CR';
       button.disabled = maxed || profile.credits < cost;
     });
   }
@@ -1261,14 +1270,14 @@
     if (level >= item.maxLevel) return;
     const cost = item.costs[level];
     if (profile.credits < cost) {
-      showToast('НЕДОСТАТОЧНО КРЕДИТОВ');
+      showToast('РќР•Р”РћРЎРўРђРўРћР§РќРћ РљР Р•Р”РРўРћР’');
       return;
     }
     profile.credits -= cost;
     profile.upgrades[id] = level + 1;
     saveProfile();
     updateProfileUi();
-    showToast(item.name + ' УР ' + (level + 1));
+    showToast(item.name + ' РЈР  ' + (level + 1));
     tone(600, 0.12, 'triangle', 0.035, 220);
   }
 
@@ -1304,29 +1313,29 @@
 
   function toggleSpeed() {
     speed = speed === 1 ? 2 : 1;
-    els.speedButton.textContent = speed + '×';
+    els.speedButton.textContent = speed + 'Г—';
     els.speedButton.classList.toggle('active', speed === 2);
   }
 
   function toggleSound() {
     soundEnabled = !soundEnabled;
     els.soundButton.classList.toggle('muted', !soundEnabled);
-    els.soundButton.setAttribute('aria-label', soundEnabled ? 'Выключить звук' : 'Включить звук');
+    els.soundButton.setAttribute('aria-label', soundEnabled ? 'Р’С‹РєР»СЋС‡РёС‚СЊ Р·РІСѓРє' : 'Р’РєР»СЋС‡РёС‚СЊ Р·РІСѓРє');
     if (soundEnabled) {
       ensureAudio();
       tone(520, 0.08, 'triangle', 0.03, 160);
     }
   }
 
-  // ---------- ввод ----------
+  // ---------- РІРІРѕРґ ----------
   function boardTransform() {
     const t = uiInsets;
     const availableH = Math.max(160, viewport.h - t.top - t.bottom);
     const scale = Math.min(viewport.w / BOARD_W, availableH / BOARD_H);
     const boardH = BOARD_H * scale;
     const ox = (viewport.w - BOARD_W * scale) / 2;
-    // если остаётся много пустоты (узкий экран), прижимаем поле к верху,
-    // чтобы пустое место собиралось у нижней панели, а не висело по центру
+    // РµСЃР»Рё РѕСЃС‚Р°С‘С‚СЃСЏ РјРЅРѕРіРѕ РїСѓСЃС‚РѕС‚С‹ (СѓР·РєРёР№ СЌРєСЂР°РЅ), РїСЂРёР¶РёРјР°РµРј РїРѕР»Рµ Рє РІРµСЂС…Сѓ,
+    // С‡С‚РѕР±С‹ РїСѓСЃС‚РѕРµ РјРµСЃС‚Рѕ СЃРѕР±РёСЂР°Р»РѕСЃСЊ Сѓ РЅРёР¶РЅРµР№ РїР°РЅРµР»Рё, Р° РЅРµ РІРёСЃРµР»Рѕ РїРѕ С†РµРЅС‚СЂСѓ
     const slack = availableH - boardH;
     const oy = t.top + (slack > 150 ? Math.min(slack, 40) : slack / 2);
     return { scale, ox, oy };
@@ -1361,23 +1370,23 @@
     selectedTowerId = null;
     const type = selectedBuildType;
     if (!towerUnlocked(type)) {
-      showToast('БАШНЯ ЗАКРЫТА // МАГАЗИН');
+      showToast('Р‘РђРЁРќРЇ Р—РђРљР Р«РўРђ // РњРђР“РђР—РРќ');
       return;
     }
     if (game.credits < TOWERS[type].cost) {
-      showToast('НЕДОСТАТОЧНО КРЕДИТОВ');
+      showToast('РќР•Р”РћРЎРўРђРўРћР§РќРћ РљР Р•Р”РРўРћР’');
       return;
     }
     if (placeTower(type, tile.col, tile.row)) {
       updateHud();
     } else {
-      showToast('ЗДЕСЬ СТРОИТЬ НЕЛЬЗЯ');
+      showToast('Р—Р”Р•РЎР¬ РЎРўР РћРРўР¬ РќР•Р›Р¬Р—РЇ');
     }
   }
 
   function selectBuildType(type) {
     if (!towerUnlocked(type)) {
-      showToast('БАШНЯ ЗАКРЫТА // МАГАЗИН');
+      showToast('Р‘РђРЁРќРЇ Р—РђРљР Р«РўРђ // РњРђР“РђР—РРќ');
       return;
     }
     selectedBuildType = type;
@@ -1484,7 +1493,7 @@
         }
         return;
       }
-      if ((key === 'p' || key === 'P' || key === 'з' || key === 'З') && game.mode !== 'menu') {
+      if ((key === 'p' || key === 'P' || key === 'Р·' || key === 'Р—') && game.mode !== 'menu') {
         if (game.paused) resumeGame();
         else pauseGame();
       }
@@ -1496,7 +1505,7 @@
     });
   }
 
-  // ---------- звук ----------
+  // ---------- Р·РІСѓРє ----------
   function ensureAudio() {
     if (!soundEnabled) return;
     if (!audio.context) {
@@ -1532,7 +1541,7 @@
     oscillator.stop(now + duration + 0.02);
   }
 
-  // ---------- отрисовка ----------
+  // ---------- РѕС‚СЂРёСЃРѕРІРєР° ----------
   function resizeCanvas() {
     const rect = canvas.getBoundingClientRect();
     viewport.w = Math.max(320, rect.width);
@@ -1585,11 +1594,11 @@
     ctx.translate(t.ox, t.oy);
     ctx.scale(t.scale, t.scale);
 
-    // подложка поля
+    // РїРѕРґР»РѕР¶РєР° РїРѕР»СЏ
     ctx.fillStyle = 'rgba(9, 14, 34, 0.86)';
     ctx.fillRect(0, 0, BOARD_W, BOARD_H);
 
-    // сетка
+    // СЃРµС‚РєР°
     ctx.strokeStyle = 'rgba(79, 147, 190, 0.11)';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -1607,7 +1616,7 @@
     drawRoad(t);
     drawBuildableHints(t);
 
-    // рамка
+    // СЂР°РјРєР°
     ctx.strokeStyle = 'rgba(99, 231, 255, 0.34)';
     ctx.lineWidth = 2;
     ctx.strokeRect(1, 1, BOARD_W - 2, BOARD_H - 2);
@@ -1629,7 +1638,7 @@
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // бегущие штрихи
+    // Р±РµРіСѓС‰РёРµ С€С‚СЂРёС…Рё
     ctx.save();
     ctx.strokeStyle = 'rgba(99, 231, 255, 0.4)';
     ctx.lineWidth = 2;
@@ -1719,7 +1728,7 @@
       ctx.save();
       ctx.translate(tower.x, tower.y);
 
-      // основание
+      // РѕСЃРЅРѕРІР°РЅРёРµ
       hexPath(ctx, 0, 0, TILE * 0.36, Math.PI / 6);
       ctx.fillStyle = 'rgba(8, 14, 34, 0.96)';
       ctx.fill();
@@ -1739,7 +1748,7 @@
       drawTowerBarrel(tower, def);
       ctx.restore();
 
-      // уровень
+      // СѓСЂРѕРІРµРЅСЊ
       const pips = tower.level;
       ctx.fillStyle = def.color;
       for (let i = 0; i < pips; i++) {
@@ -1968,7 +1977,7 @@
   }
 
   function render() {
-    // всегда начинаем с чистого преобразования под devicePixelRatio
+    // РІСЃРµРіРґР° РЅР°С‡РёРЅР°РµРј СЃ С‡РёСЃС‚РѕРіРѕ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ РїРѕРґ devicePixelRatio
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const t = boardTransform();
@@ -1999,7 +2008,7 @@
     }
   }
 
-  // ---------- цикл ----------
+  // ---------- С†РёРєР» ----------
   function frame(now) {
     const dt = Math.min(0.05, Math.max(0, (now - lastFrame) / 1000));
     lastFrame = now;
@@ -2016,7 +2025,7 @@
     requestAnimationFrame(frame);
   }
 
-  // ---------- старт ----------
+  // ---------- СЃС‚Р°СЂС‚ ----------
   buildBoard();
   buildTowerCards();
   setupInput();
@@ -2024,8 +2033,8 @@
   updateProfileUi();
   updateHud();
 
-  // Отладочный доступ по адресу вида index.html?debug — позволяет проверять
-  // внутреннее состояние из консоли и автотестов. В обычном запуске не включается.
+  // РћС‚Р»Р°РґРѕС‡РЅС‹Р№ РґРѕСЃС‚СѓРї РїРѕ Р°РґСЂРµСЃСѓ РІРёРґР° index.html?debug вЂ” РїРѕР·РІРѕР»СЏРµС‚ РїСЂРѕРІРµСЂСЏС‚СЊ
+  // РІРЅСѓС‚СЂРµРЅРЅРµРµ СЃРѕСЃС‚РѕСЏРЅРёРµ РёР· РєРѕРЅСЃРѕР»Рё Рё Р°РІС‚РѕС‚РµСЃС‚РѕРІ. Р’ РѕР±С‹С‡РЅРѕРј Р·Р°РїСѓСЃРєРµ РЅРµ РІРєР»СЋС‡Р°РµС‚СЃСЏ.
   if (/[?&]debug\b/.test(window.location.search)) {
     window.__bastion = {
       state: () => ({
