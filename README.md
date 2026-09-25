@@ -1,6 +1,18 @@
-# NEON//COURIER
+# YandexGame
 
-Браузерная аркада на выживание, сделанная на чистых HTML, CSS и JavaScript с Canvas 2D. Unity, Unreal и игровые движки не нужны.
+Здесь лежат две браузерные игры на чистых HTML, CSS и JavaScript с Canvas 2D. Unity, Unreal и игровые движки не нужны.
+
+| Проект | Жанр | Состояние |
+|---|---|---|
+| NEON//COURIER (корень репозитория) | аркада на выживание | опубликована на itch.io |
+| [NEON//BASTION](neon-bastion/README.md) | башенная оборона | 30 волн, готова к публикации |
+
+Архивы для загрузки: `neon-courier-yandex.zip` и `neon-bastion-itch.zip`.
+Ассеты для листингов: `yandex-assets/` и `bastion-assets/`.
+
+---
+
+# NEON//COURIER
 
 **Опубликована:** <https://teivrim.itch.io/neon-courier>
 

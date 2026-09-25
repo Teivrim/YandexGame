@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#070a18">
+  <meta name="description" content="NEON//BASTION — неоновый башенный оборонец с 30 волнами и постоянной прокачкой.">
+  <title>NEON//BASTION</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app">
+    <canvas id="gameCanvas" aria-label="Игровое поле"></canvas>
+    <div class="crt" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <section id="hud" class="hud is-hidden" aria-live="polite">
+      <div class="hud-left">
+        <div class="logo-mark">NEON<span>//</span>BASTION</div>
+        <div class="hud-stat"><span class="stat-label">ВОЛНА</span><strong id="waveValue">01</strong><small id="waveTotal">/30</small></div>
+        <div class="hud-stat credit-hud"><span class="stat-label">КРЕДИТЫ</span><strong id="hudCreditsValue">000</strong></div>
+      </div>
+      <div class="hud-right">
+        <div class="hud-stat health-stat"><span class="stat-label">БАЗА</span><div id="healthPips" class="pips"></div></div>
+        <div class="hud-stat"><span class="stat-label">ВРАГИ</span><strong id="enemyCountValue">00</strong></div>
+        <button id="speedButton" class="icon-button" type="button" aria-label="Скорость" title="Скорость">1×</button>
+        <button id="soundButton" class="icon-button" type="button" aria-label="Выключить звук" title="Звук">◖))</button>
+        <button id="pauseButton" class="icon-button" type="button" aria-label="Пауза" title="Пауза">Ⅱ</button>
+      </div>
+      <div class="wave-banner is-hidden" id="waveBanner"><span></span></div>
+    </section>
+
+    <section id="buildBar" class="build-bar is-hidden" aria-label="Панель башен">
+      <div id="towerCards" class="tower-cards"></div>
+      <button id="startWaveButton" class="start-wave-button" type="button">
+        <span>НАЧАТЬ ВОЛНУ</span><b id="prepTimer">25</b>
+      </button>
+    </section>
+
+    <section id="selectionPanel" class="selection-panel is-hidden" aria-label="Выбранная башня">
+      <div class="selection-head">
+        <span class="selection-icon" id="selectionIcon">◉</span>
+        <div>
+          <strong id="selectionName">Импульс</strong>
+          <small id="selectionLevel">УРОВЕНЬ 1 / 3</small>
+        </div>
+      </div>
+      <div class="selection-stats">
+        <div><span>УРОН</span><strong id="selectionDamage">12</strong></div>
+        <div><span>РАДИУС</span><strong id="selectionRange">120</strong></div>
+        <div><span>УРОВЕНЬ</span><strong id="selectionLevelStat">1</strong></div>
+      </div>
+      <div class="selection-actions">
+        <button id="upgradeTowerButton" class="upgrade-tower-button" type="button"><span>УЛУЧШИТЬ</span><b id="upgradeTowerCost">80 CR</b></button>
+        <button id="sellTowerButton" class="sell-tower-button" type="button"><span>ПРОДАТЬ</span><b id="sellTowerValue">+36 CR</b></button>
+      </div>
+    </section>
+
+    <section id="menu" class="screen menu-screen">
+      <div class="menu-card">
+        <div class="eyebrow">БАШЕННАЯ ОБОРОНА // 30 ВОЛН</div>
+        <h1>NEON<span>//</span><br>BASTION</h1>
+        <p class="tagline">Держи периметр. Ставь турели между волнами.<br>Продержись все 30 волн.</p>
+        <button id="playButton" class="primary-button" type="button"><span>НАЧАТЬ ОБОРОНУ</span><b>→</b></button>
+        <div class="menu-actions">
+          <button id="shopButton" class="secondary-button" type="button"><span>МАГАЗИН</span><b id="menuCreditsValue">0 CR</b></button>
+          <button id="menuDailyButton" class="daily-mini-button" type="button">ЕЖЕДНЕВНЫЙ БОНУС // +80 CR</button>
+        </div>
+        <div class="best-line">ЛУЧШАЯ ВОЛНА <strong id="bestValue">00</strong> / 30</div>
+        <div class="controls-hint">
+          <div><kbd>1</kbd>–<kbd>5</kbd><span>выбор башни</span></div>
+          <div><kbd>ЛКМ</kbd><span>построить</span></div>
+          <div><kbd>ESC</kbd><span>отмена</span></div>
+        </div>
+        <div class="mobile-hint">На телефоне: тап по клетке — построить, тап по башне — улучшить</div>
+      </div>
+      <div class="version-tag">v1.0 // TOWER DEFENSE</div>
+    </section>
+
+    <section id="pauseScreen" class="screen pause-screen is-hidden">
+      <div class="pause-card">
+        <div class="eyebrow">СИСТЕМА ЖДЁТ</div>
+        <h2>ПАУЗА</h2>
+        <p>Оборона приостановлена.</p>
+        <button id="resumeButton" class="primary-button" type="button"><span>ПРОДОЛЖИТЬ</span><b>→</b></button>
+        <button id="pauseShopButton" class="text-button" type="button">Открыть магазин</button>
+        <button id="quitButton" class="text-button" type="button">Выйти в меню</button>
+      </div>
+    </section>
+
+    <section id="gameoverScreen" class="screen gameover-screen is-hidden">
+      <div class="pause-card result-card">
+        <div class="eyebrow">ПЕРИМЕТР ПРОРВАН</div>
+        <h2>ОБОРОНА ПАЛА</h2>
+        <div class="result-score"><span>ВОЛНА</span><strong id="finalWave">01</strong></div>
+        <div class="result-row"><span>Уничтожено врагов</span><strong id="finalKills">0</strong></div>
+        <div class="result-row"><span>Построено башен</span><strong id="finalTowers">0</strong></div>
+        <div class="result-row credits-row"><span>Кредиты за оборону</span><strong id="runCredits">+0 CR</strong></div>
+        <div class="new-record is-hidden" id="newRecord">НОВЫЙ РЕКОРД //</div>
+        <button id="retryButton" class="primary-button" type="button"><span>ЕЩЁ РАЗ</span><b>↻</b></button>
+        <button id="resultShopButton" class="secondary-button full-width" type="button"><span>МАГАЗИН УЛУЧШЕНИЙ</span><b>＋</b></button>
+        <button id="menuButton" class="text-button" type="button">В главное меню</button>
+      </div>
+    </section>
+
+    <section id="winScreen" class="screen gameover-screen is-hidden">
+      <div class="pause-card result-card win-card">
+        <div class="eyebrow">ПЕРИМЕТР УДЕРЖАН</div>
+        <h2>ПОБЕДА</h2>
+        <p class="tagline">Все 30 волн отражены. Периметр цел.</p>
+        <div class="result-score"><span>КРЕДИТЫ</span><strong id="winCredits">0 CR</strong></div>
+        <div class="result-row"><span>Уничтожено врагов</span><strong id="winKills">0</strong></div>
+        <div class="result-row"><span>Построено башен</span><strong id="winTowers">0</strong></div>
+        <button id="winRetryButton" class="primary-button" type="button"><span>НОВАЯ ОБОРОНА</span><b>↻</b></button>
+        <button id="winShopButton" class="secondary-button full-width" type="button"><span>МАГАЗИН УЛУЧШЕНИЙ</span><b>＋</b></button>
+        <button id="winMenuButton" class="text-button" type="button">В главное меню</button>
+      </div>
+    </section>
+
+    <section id="shop" class="screen shop-screen is-hidden" aria-labelledby="shopTitle">
+      <div class="shop-card">
+        <div class="shop-header">
+          <div>
+            <div class="eyebrow">АРСЕНАЛ // PERMANENT UPGRADES</div>
+            <h2 id="shopTitle">МАГАЗИН</h2>
+          </div>
+          <div class="wallet"><span>БАЛАНС</span><strong id="shopCreditsValue">0 CR</strong></div>
+        </div>
+        <p class="shop-copy">Улучшения сохраняются между обороны. Кредиты начисляются за пройденные волны и за боссов.</p>
+        <div class="shop-grid">
+          <article class="upgrade-card" data-upgrade="starter">
+            <div class="upgrade-top"><span class="upgrade-icon">▣</span><span class="upgrade-level">УР 0 / 3</span></div>
+            <h3>Стабилизатор</h3>
+            <p>+60 стартовых кредитов за оборону.</p>
+            <div class="upgrade-bottom"><div class="level-track"><i></i><i></i><i></i></div><button class="buy-button" data-buy="starter" type="button">140 CR</button></div>
+          </article>
+          <article class="upgrade-card" data-upgrade="damage">
+            <div class="upgrade-top"><span class="upgrade-icon">✦</span><span class="upgrade-level">УР 0 / 3</span></div>
+            <h3>Резонансное ядро</h3>
+            <p>+12% к урону всех башен.</p>
+            <div class="upgrade-bottom"><div class="level-track"><i></i><i></i><i></i></div><button class="buy-button" data-buy="damage" type="button">180 CR</button></div>
+          </article>
+          <article class="upgrade-card" data-upgrade="rate">
+            <div class="upgrade-top"><span class="upgrade-icon">»</span><span class="upgrade-level">УР 0 / 3</span></div>
+            <h3>Автомат заряда</h3>
+            <p>+10% к скорострельности.</p>
+            <div class="upgrade-bottom"><div class="level-track"><i></i><i></i><i></i></div><button class="buy-button" data-buy="rate" type="button">160 CR</button></div>
+          </article>
+          <article class="upgrade-card" data-upgrade="core">
+            <div class="upgrade-top"><span class="upgrade-icon">◈</span><span class="upgrade-level">УР 0 / 3</span></div>
+            <h3>Бронеклапан</h3>
+            <p>+5 к прочности базы.</p>
+            <div class="upgrade-bottom"><div class="level-track"><i></i><i></i><i></i></div><button class="buy-button" data-buy="core" type="button">150 CR</button></div>
+          </article>
+          <article class="upgrade-card" data-upgrade="tesla">
+            <div class="upgrade-top"><span class="upgrade-icon">⚡</span><span class="upgrade-level">ЗАКРЫТО</span></div>
+            <h3>Генератор</h3>
+            <p>Открывает башню «Генератор» — цепной разряд.</p>
+            <div class="upgrade-bottom"><div class="level-track"><i></i></div><button class="buy-button" data-buy="tesla" type="button">400 CR</button></div>
+          </article>
+          <article class="upgrade-card" data-upgrade="rail">
+            <div class="upgrade-top"><span class="upgrade-icon">▤</span><span class="upgrade-level">ЗАКРЫТО</span></div>
+            <h3>Рельсотрон</h3>
+            <p>Открывает башню «Рельсотрон» — дальний рельсовый выстрел.</p>
+            <div class="upgrade-bottom"><div class="level-track"><i></i></div><button class="buy-button" data-buy="rail" type="button">550 CR</button></div>
+          </article>
+        </div>
+        <div class="daily-panel">
+          <div><div class="eyebrow">ЕЖЕДНЕВНОЕ СНАБЖЕНИЕ</div><strong id="dailyStatus">Бонус доступен</strong></div>
+          <button id="dailyButton" class="daily-button" type="button">ЗАБРАТЬ +80 CR</button>
+        </div>
+        <div class="shop-footer"><span>Оборон: <strong id="runCountValue">0</strong></span><button id="closeShopButton" class="primary-button compact" type="button"><span>НАЗАД</span><b>×</b></button></div>
+      </div>
+    </section>
+
+    <div id="toast" class="toast" role="status"></div>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
