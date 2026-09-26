@@ -703,10 +703,34 @@
   // ПРОФИЛЬ
   // ==================================================================
   const STORAGE_KEY = 'neon-oni-profile-v1';
+
+  // В APK страница открыта по file://, где localStorage держится на
+  // непрозрачном происхождении и может молча не сохранять прогресс.
+  // Поэтому при наличии моста AndroidStore пишем через него,
+  // а localStorage оставляем запасным вариантом и для веба.
+  const nativeStore = (typeof window !== 'undefined' && window.AndroidStore) ? window.AndroidStore : null;
+
+  function readProfileRaw() {
+    if (nativeStore) {
+      try {
+        const v = nativeStore.load(STORAGE_KEY);
+        if (v) return v;
+      } catch (e) { /* мост недоступен, идём дальше */ }
+    }
+    try { return localStorage.getItem(STORAGE_KEY) || null; } catch (e) { return null; }
+  }
+
+  function writeProfileRaw(text) {
+    if (nativeStore) {
+      try { nativeStore.save(STORAGE_KEY, text); } catch (e) { /* игнорируем, есть запасной путь */ }
+    }
+    try { localStorage.setItem(STORAGE_KEY, text); } catch (e) { /* приватный режим */ }
+  }
+
   function loadProfile() {
     const base = { best: 0, bestStage: 0, fighters: { yuki: true }, totalKills: 0 };
     let raw = null;
-    try { raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (e) { raw = null; }
+    try { raw = JSON.parse(readProfileRaw() || 'null'); } catch (e) { raw = null; }
     if (!raw || typeof raw !== 'object') return base;
     return {
       best: Math.max(0, Math.floor(Number(raw.best) || 0)),
@@ -720,7 +744,7 @@
     };
   }
   function saveProfile() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(profile)); } catch (e) { /* приватный режим */ }
+    writeProfileRaw(JSON.stringify(profile));
   }
   let profile = loadProfile();
 
@@ -2372,6 +2396,8 @@
   }
 
   function backToMenu() {
+    // Рекорд и открытые бойцы не должны теряться из-за выхода в меню
+    if (run) saveProfile();
     mode = 'menu';
     run = null;
     stage = null;
@@ -2445,6 +2471,7 @@
         fighters: FIGHTER_ORDER,
         body: { BODY_H, HEAD_H, LEG, TORSO, ARM_U, ARM_L, GRAVITY, JUMP_V, DASH_SPEED, FLOOR_DEPTH },
         setMeter: (v) => { if (run && run.p) run.p.meter = (v || 0) * run.p.maxMeter / 100; },
+        _meter: () => (run && run.p ? Math.round(run.p.meter) : -1),
         // Сырое положение бойца — нужно, чтобы измерять физику в браузере
         _p: () => (run && run.p ? { x: run.p.x, y: run.p.y, z: run.p.z, vx: run.p.vx, vz: run.p.vz, state: run.p.state } : null),
         groundY: () => groundY(),
