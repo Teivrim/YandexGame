@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#070a18">
+  <meta name="description" content="NEON//DESCENT — roguelite с процедурной генерацией, классами и постоянной прокачкой.">
+  <title>NEON//DESCENT</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app">
+    <canvas id="gameCanvas" aria-label="Игровое поле"></canvas>
+    <div class="crt" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <!-- ================= HUD ================= -->
+    <section id="hud" class="hud is-hidden" aria-live="polite">
+      <div class="hud-row hud-top">
+        <div class="hud-left">
+          <div class="vitals">
+            <div class="bar hp-bar">
+              <div id="hpFill" class="bar-fill"></div>
+              <span id="hpText" class="bar-text">20/20</span>
+            </div>
+            <div class="bar xp-bar">
+              <div id="xpFill" class="bar-fill"></div>
+              <span id="xpText" class="bar-text">УР 1</span>
+            </div>
+          </div>
+        </div>
+        <div class="hud-right">
+          <div class="hud-stat"><span class="stat-label">ЭТАЖ</span><strong id="floorValue">1</strong></div>
+          <div class="hud-stat"><span class="stat-label">ОЧКИ</span><strong id="scoreValue">0</strong></div>
+          <div class="hud-stat credit-hud"><span class="stat-label">КРИСТАЛЛЫ</span><strong id="metaValue">0</strong></div>
+          <button id="soundButton" class="icon-button" type="button" aria-label="Звук" title="Звук">◖))</button>
+          <button id="menuButton" class="icon-button" type="button" aria-label="В меню" title="В меню">✕</button>
+        </div>
+      </div>
+
+      <div id="logPanel" class="log-panel" aria-live="polite"></div>
+
+      <div class="hud-row hud-bottom">
+        <div class="gear-strip">
+          <div class="gear-slot"><span class="gear-label">ОРУЖИЕ</span><span id="weaponName" class="gear-value">кулаки</span></div>
+          <div class="gear-slot"><span class="gear-label">БРОНЯ</span><span id="armorName" class="gear-value">нет</span></div>
+          <div class="gear-slot"><span class="gear-label">АМУЛЕТ</span><span id="trinketName" class="gear-value">нет</span></div>
+        </div>
+        <div class="ability-strip" id="abilityStrip"></div>
+      </div>
+
+      <div id="prompt" class="prompt is-hidden"></div>
+    </section>
+
+    <!-- ================= МЕНЮ ================= -->
+    <section id="menu" class="screen menu-screen">
+      <div class="menu-card">
+        <div class="eyebrow">ROGUELITE // ПРОЦЕДУРНОЕ ПОДЗЕМЕЛЬЕ</div>
+        <h1>NEON<span>//</span><br>DESCENT</h1>
+        <p class="tagline">Спускайся глубже. Умирай. Выходи сильнее.<br>Кристаллы переживут любую смерть.</p>
+        <button id="playButton" class="primary-button" type="button"><span>СПУСТИТЬСЯ</span><b>→</b></button>
+        <div class="menu-actions">
+          <button id="arsenalButton" class="secondary-button" type="button"><span>АРСЕНАЛ</span><b id="menuMetaValue">0</b></button>
+        </div>
+        <div class="best-line">ГЛУБИНА РЕКОРДА <strong id="bestValue">0</strong> ЭТАЖЕЙ</div>
+        <div class="controls-hint">
+          <div><kbd>WASD</kbd><span>движение</span></div>
+          <div><kbd>F</kbd><span>атака</span></div>
+          <div><kbd>I</kbd><span>инвентарь</span></div>
+          <div><kbd>ESC</kbd><span>пауза</span></div>
+        </div>
+      </div>
+      <div class="version-tag">v1.0 // ROGUELITE</div>
+    </section>
+
+    <!-- ================= ВЫБОР КЛАССА ================= -->
+    <section id="classScreen" class="screen menu-screen is-hidden">
+      <div class="class-panel">
+        <div class="eyebrow">ВЫБОР КУРСАНТА</div>
+        <h2>КТО ТЫ?</h2>
+        <div id="classList" class="class-list"></div>
+        <button id="classBackButton" class="text-button" type="button">Назад в меню</button>
+      </div>
+    </section>
+
+    <!-- ================= АРСЕНАЛ (мета) ================= -->
+    <section id="arsenal" class="screen shop-screen is-hidden" aria-labelledby="arsenalTitle">
+      <div class="shop-card">
+        <div class="shop-header">
+          <div>
+            <div class="eyebrow">ПОСТОЯННЫЕ УЛУЧШЕНИЯ // МЕТА-ПРОГРЕСС</div>
+            <h2 id="arsenalTitle">АРСЕНАЛ</h2>
+          </div>
+          <div class="wallet"><span>КРИСТАЛЛЫ</span><strong id="arsenalMetaValue">0</strong></div>
+        </div>
+        <p class="shop-copy">Кристаллы начисляются за этажи, убийства и победы. Улучшения действуют во всех следующих спусках и не теряются при смерти.</p>
+        <div class="shop-grid" id="arsenalGrid"></div>
+        <div class="shop-footer">
+          <span>Спусков: <strong id="runCountValue">0</strong> · Побед: <strong id="winCountValue">0</strong></span>
+          <button id="closeArsenalButton" class="primary-button compact" type="button"><span>НАЗАД</span><b>×</b></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ИНВЕНТАРЬ ================= -->
+    <section id="inventory" class="screen inventory-screen is-hidden">
+      <div class="inventory-card">
+        <div class="shop-header">
+          <div>
+            <div class="eyebrow">СНАРЯЖЕНИЕ</div>
+            <h2>ИНВЕНТАРЬ</h2>
+          </div>
+          <button id="closeInventoryButton" class="icon-button" type="button" aria-label="Закрыть">×</button>
+        </div>
+        <div class="inventory-body">
+          <div class="equipment-col">
+            <div class="equip-slot" id="slotWeapon" data-slot="weapon"><span class="slot-title">ОРУЖИЕ</span><span class="slot-item">пусто</span></div>
+            <div class="equip-slot" id="slotArmor" data-slot="armor"><span class="slot-title">БРОНЯ</span><span class="slot-item">пусто</span></div>
+            <div class="equip-slot" id="slotTrinket" data-slot="trinket"><span class="slot-title">АМУЛЕТ</span><span class="slot-item">пусто</span></div>
+          </div>
+          <div class="backpack-col">
+            <div class="backpack-title">РЮКЗАК</div>
+            <div id="backpackList" class="backpack-list"></div>
+          </div>
+        </div>
+        <div class="inventory-stats" id="inventoryStats"></div>
+      </div>
+    </section>
+
+    <!-- ================= ПАУЗА ================= -->
+    <section id="pauseScreen" class="screen pause-screen is-hidden">
+      <div class="pause-card">
+        <div class="eyebrow">ПОДОЗЕМЕЛЬЕ ЖДЁТ</div>
+        <h2>ПАУЗА</h2>
+        <div class="pause-stats" id="pauseStats"></div>
+        <button id="resumeButton" class="primary-button" type="button"><span>ПРОДОЛЖИТЬ</span><b>→</b></button>
+        <button id="pauseInventoryButton" class="text-button" type="button">Инвентарь</button>
+        <button id="quitButton" class="text-button" type="button">Сдаться и выйти</button>
+      </div>
+    </section>
+
+    <!-- ================= СМЕРТЬ ================= -->
+    <section id="deathScreen" class="screen gameover-screen is-hidden">
+      <div class="pause-card result-card">
+        <div class="eyebrow">СИГНАЛ ПОТЕРЯН</div>
+        <h2>ТЫ ПАЛ</h2>
+        <div class="result-score"><span>ЭТАЖ</span><strong id="deathFloor">1</strong></div>
+        <div class="result-row"><span>Причина</span><strong id="deathCause">—</strong></div>
+        <div class="result-row"><span>Убито врагов</span><strong id="deathKills">0</strong></div>
+        <div class="result-row"><span>Достигнут уровень</span><strong id="deathLevel">1</strong></div>
+        <div class="result-row credits-row"><span>Кристаллы за спуск</span><strong id="deathCrystals">+0</strong></div>
+        <div class="new-record is-hidden" id="newRecord">НОВАЯ ГЛУБИНА //</div>
+        <button id="retryButton" class="primary-button" type="button"><span>ЕЩЁ СПУСК</span><b>↻</b></button>
+        <button id="deathArsenalButton" class="secondary-button full-width" type="button"><span>АРСЕНАЛ</span><b>＋</b></button>
+        <button id="deathMenuButton" class="text-button" type="button">В главное меню</button>
+      </div>
+    </section>
+
+    <!-- ================= ПОБЕДА ================= -->
+    <section id="winScreen" class="screen gameover-screen is-hidden">
+      <div class="pause-card result-card win-card">
+        <div class="eyebrow">ГЛУБИНА ПРОЙДЕНА</div>
+        <h2>ПОБЕДА</h2>
+        <p class="tagline">Ядро схронило тебя. Но спуск был лёгким.</p>
+        <div class="result-score"><span>КРИСТАЛЛЫ</span><strong id="winCrystals">0</strong></div>
+        <div class="result-row"><span>Убито врагов</span><strong id="winKills">0</strong></div>
+        <div class="result-row"><span>Достигнут уровень</span><strong id="winLevel">1</strong></div>
+        <button id="winRetryButton" class="primary-button" type="button"><span>НОВЫЙ СПУСК</span><b>↻</b></button>
+        <button id="winArsenalButton" class="secondary-button full-width" type="button"><span>АРСЕНАЛ</span><b>＋</b></button>
+        <button id="winMenuButton" class="text-button" type="button">В главное меню</button>
+      </div>
+    </section>
+
+    <div id="toast" class="toast" role="status"></div>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
