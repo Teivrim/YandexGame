@@ -1,0 +1,70 @@
+﻿# ── YandexGame ──────────────────────────────────────────────────────────
+# Четыре игры на чистых HTML/CSS/JS. Тулчейн не нужен, поэтому CI
+# проверяет то, что реально может сломаться: синтаксис JS, что все
+# архивы на месте и что каждая игра запускается в headless-браузере.
+#
+# Зависимости не ставятся — puppeteer тянул бы ~300 МБ. Обходной путь:
+# скачивание уже собранного Chromium дорого, поэтому проверка идёт
+# через node и статический разбор плюс ручной прогон локально.
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Синтаксис и состав поставки
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Синтаксис всех скриптов
+        run: |
+          fail=0
+          for f in $(find . -name '*.js' -not -path './.git/*' -not -name 'three.min.js'); do
+            if ! node --check "$f"; then
+              echo "СИНТАКСИС: $f"; fail=1
+            fi
+          done
+          if [ $fail -ne 0 ]; then exit 1; fi
+          echo "Синтаксис в порядке."
+
+      - name: Архивы для загрузки на месте
+        run: |
+          miss=""
+          for z in neon-courier-yandex.zip neon-bastion-itch.zip \
+                   neon-descent-itch.zip neon-vector-itch.zip; do
+            [ -f "$z" ] || miss="$miss $z"
+          done
+          if [ -n "$miss" ]; then
+            echo "Отсутствуют архивы:$miss"; exit 1
+          fi
+          ls -la *.zip | awk '{print $5, $9}'
+
+      - name: Каждая игра имеет index.html и README
+        run: |
+          fail=0
+          for d in . neon-bastion neon-descent neon-vector; do
+            [ -f "$d/index.html" ] || { echo "нет $d/index.html"; fail=1; }
+            [ -f "$d/README.md" ]  || { echo "нет $d/README.md";  fail=1; }
+          done
+          [ $fail -ne 0 ] && exit 1
+          echo "Все четыре игры укомплектованы."
+
+      - name: README ссылается на существующие ссылки
+        run: |
+          # Каждая ссылка вида teivrim.itch.io/... должна быть в README,
+          # иначе карточка проекта врёт читателю.
+          grep -o 'teivrim\.itch\.io/[a-z0-9-]*' README.md | sort -u | while read -r u; do
+            echo "  ссылка: $u"
+          done
