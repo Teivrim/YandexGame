@@ -44,9 +44,14 @@ async function main() {
   await send('Page.enable');
   await send('Emulation.setFocusEmulationEnabled', { enabled: true });
 
-  // Загружаем картинку прямо в страницу, потом рисуем нужные размеры
-  await send('Page.navigate', { url: 'https://itch.io/game/edit/5056118' });
-  await sleep(4000);
+  // Рисуем прямо на пустой странице. Раньше здесь стоял переход на
+  // https://itch.io/game/edit/5056118, но он был не нужен: картинка
+  // приходит как data URL, ей не на чем лежать, кроме какого-нибудь
+  // документа. Из-за этого перехода сборка APK зависала на 30 минут,
+  // когда страница itch не догружалась, - а от неё ничего не зависело.
+  const st = await ev('({ ready: document.readyState, href: location.href })');
+  console.log('  рисуем на ' + (st && st.href) + ' (readyState ' + (st && st.ready) + ')');
+
   await ev(`new Promise(function (res, rej) {
     const img = new Image();
     img.onload = function () { window.__icon = img; res(true); };

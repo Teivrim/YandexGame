@@ -37,17 +37,34 @@ if ($LASTEXITCODE -ne 0) { throw "make-project failed" }
 & node "$here\make-icons.js" $Game $proj
 if ($LASTEXITCODE -ne 0) { throw "make-icons failed" }
 
-# ---- 2/8 игра в один ES5-файл -------------------------------------------
-Write-Host "2/8 сборка игры в assets" -ForegroundColor Cyan
+# ---- 2/8 игра в assets -----------------------------------------------------
+# Обычная игра кладётся одним самодостаточным index.html. Сборник
+# устроен иначе: в assets ложится меню плюс пять игр рядом, каждая
+# собирается тем же build-bundle.js. Ветка выбирается по признаку
+# collection в games.js, чтобы не заводить второй скрипт сборки.
 $hereFwd = $here -replace '\\','/'
-$srcAndSkip = (& node -e "const g=require('$hereFwd/games').games['$Game']; process.stdout.write(require('path').resolve('$hereFwd', g.src) + '|' + g.skip.join(','));")
-if ($LASTEXITCODE -ne 0 -or -not $srcAndSkip) { throw "не удалось прочитать games.js" }
-$parts = $srcAndSkip.Split('|')
-$src = $parts[0]
-$skip = if ($parts.Length -gt 1) { $parts[1] } else { '' }
-Write-Host "   исходники: $src  (пропуск: '$skip')"
-& node "$here\build-bundle.js" $src "$proj\assets\index.html" $skip
-if ($LASTEXITCODE -ne 0) { throw "build-bundle failed" }
+$isCollection = (& node -e "const g=require('$hereFwd/games').games['$Game']; process.stdout.write(g.collection ? 'yes' : 'no');")
+if ($LASTEXITCODE -ne 0) { throw "не удалось прочитать games.js" }
+if ($isCollection -eq "yes") {
+  Write-Host "2/8 сборка сборника в assets" -ForegroundColor Cyan
+  & node "$here\build-collection.js" "$proj\assets" ".."
+  if ($LASTEXITCODE -ne 0) { throw "build-collection failed" }
+} else {
+  Write-Host "2/8 сборка игры в assets" -ForegroundColor Cyan
+  # Каталог проекта переиспользуется между сборками. Без очистки в пакет
+  # попадают файлы прошлой сборки: так в assets однажды остались пять
+  # games/*.html от прежней многофайловой схемы сборника.
+  if (Test-Path "$proj\assets") { Remove-Item "$proj\assets" -Recurse -Force }
+  New-Item -ItemType Directory -Force -Path "$proj\assets" | Out-Null
+  $srcAndSkip = (& node -e "const g=require('$hereFwd/games').games['$Game']; process.stdout.write(require('path').resolve('$hereFwd', g.src) + '|' + g.skip.join(','));")
+  if ($LASTEXITCODE -ne 0 -or -not $srcAndSkip) { throw "не удалось прочитать games.js" }
+  $parts = $srcAndSkip.Split('|')
+  $src = $parts[0]
+  $skip = if ($parts.Length -gt 1) { $parts[1] } else { '' }
+  Write-Host "   исходники: $src  (пропуск: '$skip')"
+  & node "$here\build-bundle.js" $src "$proj\assets\index.html" $skip
+  if ($LASTEXITCODE -ne 0) { throw "build-bundle failed" }
+}
 
 # ---- подготовка выходной папки -------------------------------------------
 if (Test-Path $OutDir) { Remove-Item $OutDir -Recurse -Force }

@@ -56,6 +56,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -135,11 +136,32 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (web != null && web.canGoBack()) {
-            web.goBack();
-        } else {
+        if (web == null) {
             super.onBackPressed();
+            return;
         }
+        // Сборник держит игру в iframe и решает сам, что делать с «назад».
+        // На file:// history.pushState может бросить SecurityError, тогда
+        // canGoBack() врёт, и «назад» выкинул бы из приложения посреди
+        // игры. Поэтому сперва спрашиваем у страницы. У одиночных игр
+        // window.NEON нет, ответ будет 0, и поведение прежнее.
+        web.evaluateJavascript(
+                "(function(){try{return (window.NEON && window.NEON.current()) ? '1' : '0';}catch(e){return '0';}})()",
+                new ValueCallback<String>() {
+                    @Override
+                    public void onReceiveValue(String value) {
+                        if ("1".equals(value)) {
+                            web.evaluateJavascript(
+                                    "try{window.NEON.close();}catch(e){}", null);
+                            return;
+                        }
+                        if (web != null && web.canGoBack()) {
+                            web.goBack();
+                        } else {
+                            finish();
+                        }
+                    }
+                });
     }
 
     @Override

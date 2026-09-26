@@ -1,0 +1,245 @@
+/* Меню сборника. Тёмная неоновая тема серии NEON. */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #05060d;
+  color: #e8ecff;
+  font-family: "Segoe UI", Roboto, system-ui, sans-serif;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  /* Мягкое свечение сверху: фон не выглядит плоским чёрным листом. */
+  background:
+    radial-gradient(120% 80% at 50% -10%, #14204a 0%, #05060d 58%, #03040a 100%);
+}
+
+/* ---------- меню ---------- */
+
+.menu {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: max(18px, env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.head { flex: 0 0 auto; }
+
+.logo {
+  margin: 0;
+  line-height: 0.95;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  font-size: clamp(30px, 7.2vw, 58px);
+}
+
+.logo-a { color: #ffffff; text-shadow: 0 0 26px #3ba7ff88; }
+.logo-b { color: #3ba7ff; text-shadow: 0 0 26px #3ba7ffcc; }
+
+.tagline {
+  margin: 12px 0 0;
+  max-width: 62ch;
+  font-size: clamp(13px, 1.5vw, 16px);
+  line-height: 1.5;
+  color: #9aa6d4;
+}
+
+.grid {
+  flex: 1 0 auto;
+  display: grid;
+  /* Не auto-fill: пять карточек должны стать тремя в ряд, а не пятью
+     впритык, иначе названия обрезаются, а под карточками остаётся
+     пустое поле во весь экран. */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+  /* Карточки идут сразу под заголовком, а не висят по центру окна:
+     при align-content:center над ними и под ними появлялись две
+     одинаковые пустоты, и меню выглядело сломанным */
+  align-content: start;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* ---------- карточка игры ---------- */
+
+.card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  min-height: 92px;
+  border-radius: 14px;
+  border: 1px solid #ffffff1f;
+  background: linear-gradient(140deg, #0d1230 0%, #080a18 100%);
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  width: 100%;
+  overflow: hidden;
+  transition: transform .12s ease, border-color .12s ease;
+}
+
+.card::before {
+  /* Полоса акцента слева. */
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent);
+  box-shadow: 0 0 16px var(--accent);
+}
+
+.card::after {
+  /* Диагональные линии фирменного почерка серии. */
+  content: "";
+  position: absolute;
+  right: -40px; top: -40px;
+  width: 150px; height: 150px;
+  background: repeating-linear-gradient(
+    -58deg, transparent 0 13px, var(--accent) 13px 14px);
+  opacity: .1;
+  pointer-events: none;
+}
+
+.card:active { transform: scale(.985); border-color: var(--accent); }
+@media (hover: hover) {
+  .card:hover { border-color: var(--accent2); }
+}
+
+.mark {
+  flex: 0 0 auto;
+  width: 52px; height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #ffffff0d;
+  border: 1px solid #ffffff1f;
+}
+.mark svg { width: 34px; height: 34px; display: block; }
+
+.card-body { min-width: 0; }
+
+.card-title {
+  display: block;
+  font-weight: 800;
+  font-size: clamp(16px, 1.9vw, 21px);
+  letter-spacing: .01em;
+  color: var(--accent);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent);
+  /* Название не обрезаем: обрезка ellipsis съедала половину
+     «NEON//COURIER» на широком экране */
+  overflow-wrap: anywhere;
+}
+
+.card-genre {
+  display: inline-block;
+  margin-top: 3px;
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #8fa0d8;
+}
+
+.card-pitch {
+  margin: 5px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #b9c3ea;
+}
+
+/* ---------- подвал ---------- */
+
+.foot {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding-top: 6px;
+  border-top: 1px solid #ffffff14;
+  font-size: 12px;
+  color: #7f8cc0;
+}
+.foot .dot { color: #3a4470; }
+
+/* ---------- экран игры ---------- */
+
+.stage {
+  position: fixed;
+  inset: 0;
+  background: #03040a;
+  display: flex;
+  flex-direction: column;
+}
+.stage[hidden] { display: none; }
+
+.stage-bar {
+  flex: 0 0 auto;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  padding-top: env(safe-area-inset-top);
+  background: #05060d;
+  border-bottom: 1px solid #ffffff14;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 12px 0 9px;
+  border-radius: 8px;
+  border: 1px solid #ffffff2e;
+  background: #ffffff0f;
+  color: #dfe6ff;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.back:active { background: #ffffff1c; }
+
+.back-ico {
+  width: 9px; height: 9px;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  margin-left: 2px;
+}
+
+.stage-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: #8fa0d8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.frame {
+  flex: 1 1 auto;
+  width: 100%;
+  border: 0;
+  display: block;
+  background: #03040a;
+}
+
+/* На телефоне в портретной ориентации пять карточек лучше в одну колонку. */
+@media (max-width: 380px) {
+  .grid { grid-template-columns: 1fr; }
+  .card { min-height: 82px; }
+}

@@ -31,7 +31,11 @@ function toEs5(code) {
   return babel.transformSync(code, {
     babelrc: false,
     configFile: false,
-    presets: [['@babel/preset-env', { targets: { ie: '11' }, modules: false }]]
+    // Пресет указываем абсолютным путём. По имени Babel ищет его
+    // относительно текущего каталога, и сборка падала с
+    // "Cannot find module '@babel/preset-env'", если запустить её не из
+    // rustore/, а откуда-нибудь ещё. Здесь путь всегда от этого файла.
+    presets: [[require.resolve('@babel/preset-env'), { targets: { ie: '11' }, modules: false }]]
   }).code;
 }
 

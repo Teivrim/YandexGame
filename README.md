@@ -4,6 +4,8 @@
 [![CI](https://github.com/Teivrim/YandexGame/actions/workflows/ci.yml/badge.svg)](https://github.com/Teivrim/YandexGame/actions/workflows/ci.yml) [![license](https://img.shields.io/badge/license-MIT-5eead4.svg)](LICENSE) [![lines](https://img.shields.io/badge/lines-of%20code-lightgrey.svg)]()
 Здесь лежат пять браузерных игр на чистых HTML, CSS и JavaScript с Canvas 2D. Unity, Unreal и игровые движки не нужны.
 
+Плюс [NEON//COLLECTION](neon-collection/README.md) — все пять игр в одном приложении для Android.
+
 | Проект | Жанр | Состояние |
 |---|---|---|
 | NEON//COURIER (корень репозитория) | аркада на выживание | опубликована на itch.io |
@@ -14,7 +16,7 @@
 
 Архивы для загрузки: `neon-courier-yandex.zip`, `neon-bastion-itch.zip`, `neon-descent-itch.zip`, `neon-vector-itch.zip` и `neon-oni-itch.zip`.
 Ассеты для листингов: `yandex-assets/`, `bastion-assets/`, `descent-assets/`, `vector-assets/` и `oni-assets/`.
-Баннеры игр: [`banners/`](banners/README.md). Тексты описаний, теги и заметки о поведении itch.io: [`itch/`](itch/README.md).
+Баннеры игр: [`banners/`](banners/README.md). Тексты описаний, теги и заметки о поведении itch.io: [`itch/`](itch/README.md). APK для RuStore, включая сборник: [`rustore/`](rustore/README.md).
 
 ---
 

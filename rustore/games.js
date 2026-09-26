@@ -65,6 +65,25 @@ module.exports = {
       skip: [],
       alias: 'oni',
       password: 'oni2026'
+    },
+
+    // Сборник: пять игр в одном приложении. Отдельная ветка сборки,
+    // потому что в assets ложится не один файл, а меню плюс пять игр.
+    collection: {
+      label: 'NEON',
+      package: 'com.teivrim.neon',
+      // Четыре игры из пяти сделаны на альбомную ориентацию, поэтому
+      // весь сборник держим в ландшафте: арена COURIER сверху просто
+      // становится шире, и это ей не мешает.
+      orientation: 'sensorLandscape',
+      background: '#05060d',
+      src: '..\\neon-collection',
+      icon: '..\\neon-collection\\icon.png',
+      skip: [],
+      alias: 'neon',
+      password: 'neon2026',
+      // Признак того, что сборка идёт через build-collection.js
+      collection: true
     }
   },
 

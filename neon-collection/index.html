@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>NEON//COLLECTION</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2305060d'/%3E%3Cpath d='M14 46V18l18 18V18h8v28h-8L24 28v18z' fill='%233ba7ff'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="hub.css" />
+</head>
+<body>
+
+<div id="menu" class="menu">
+  <header class="head">
+    <h1 class="logo">
+      <span class="logo-a">NEON</span><span class="logo-b">//COLLECTION</span>
+    </h1>
+    <p class="tagline">Пять игр в одном приложении. Прогресс каждой хранится отдельно и переживает перезапуск.</p>
+  </header>
+
+  <div id="grid" class="grid"></div>
+
+  <footer class="foot">
+    <span id="count">5 игр</span>
+    <span class="dot">•</span>
+    <span>работает без интернета</span>
+    <span class="dot">•</span>
+    <span>весь рисунок сделан кодом на Canvas 2D</span>
+  </footer>
+</div>
+
+<div id="stage" class="stage" hidden>
+  <div class="stage-bar">
+    <button id="back" class="back" type="button" aria-label="Назад в меню">
+      <span class="back-ico" aria-hidden="true"></span>
+      <span id="back-label">Меню</span>
+    </button>
+    <span id="stage-title" class="stage-title"></span>
+  </div>
+  <iframe id="frame" class="frame" title="Игра" allow="autoplay; gamepad"></iframe>
+</div>
+
+<!-- games-data.js не существует в исходниках: его собирает
+     rustore/build-collection.js и подставляет тег сюда. Игры лежат
+     внутри страницы строками, потому что на file:// не работают ни
+     XHR, ни подключаемые скриптом <script src>. -->
+<script src="catalog.js"></script>
+<script src="hub.js"></script>
+</body>
+</html>
