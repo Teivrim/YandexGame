@@ -1,15 +1,16 @@
 # YandexGame
 
-Здесь лежат три браузерные игры на чистых HTML, CSS и JavaScript с Canvas 2D. Unity, Unreal и игровые движки не нужны.
+Здесь лежат четыре браузерные игры на чистых HTML, CSS и JavaScript с Canvas 2D. Unity, Unreal и игровые движки не нужны.
 
 | Проект | Жанр | Состояние |
 |---|---|---|
 | NEON//COURIER (корень репозитория) | аркада на выживание | опубликована на itch.io |
 | [NEON//BASTION](neon-bastion/README.md) | башенная оборона | 30 волн, опубликована на itch.io |
 | [NEON//DESCENT](neon-descent/README.md) | roguelite | 10 этажей, 3 класса, опубликована на itch.io |
+| [NEON//VECTOR](neon-vector/README.md) | точная платформенная аркада | 8 уровней, рекорды времени, опубликована на itch.io |
 
-Архивы для загрузки: `neon-courier-yandex.zip`, `neon-bastion-itch.zip` и `neon-descent-itch.zip`.
-Ассеты для листингов: `yandex-assets/`, `bastion-assets/` и `descent-assets/`.
+Архивы для загрузки: `neon-courier-yandex.zip`, `neon-bastion-itch.zip`, `neon-descent-itch.zip` и `neon-vector-itch.zip`.
+Ассеты для листингов: `yandex-assets/`, `bastion-assets/`, `descent-assets/` и `vector-assets/`.
 
 ---
 

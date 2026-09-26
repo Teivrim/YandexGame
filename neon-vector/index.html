@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#05060d">
+  <meta name="description" content="NEON//VECTOR — точная платформенная аркада про инерцию, скольжение и импульс.">
+  <title>NEON//VECTOR</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app">
+    <canvas id="gameCanvas" aria-label="Игровое поле"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <!-- ================= HUD ================= -->
+    <section id="hud" class="hud is-hidden" aria-live="polite">
+      <div class="hud-top">
+        <div class="hud-block">
+          <span class="hud-label">ВРЕМЯ</span>
+          <strong id="timeValue" class="hud-time">0.00</strong>
+          <span id="bestValue" class="hud-sub">рекорд —</span>
+        </div>
+        <div class="hud-block hud-center">
+          <span class="hud-label">УРОВЕНЬ</span>
+          <strong id="levelValue" class="hud-level">1</strong>
+        </div>
+        <div class="hud-block hud-right">
+          <span class="hud-label">ОСКОЛКИ</span>
+          <strong id="shardValue" class="hud-shard">0/0</strong>
+          <span id="deathValue" class="hud-sub">падений 0</span>
+        </div>
+      </div>
+
+      <div id="hint" class="hint is-hidden"></div>
+
+      <div class="hud-bottom">
+        <div class="dash-wrap" id="dashWrap">
+          <div class="dash-icon" id="dashIcon">»</div>
+          <div class="dash-bar"><div class="dash-fill" id="dashFill"></div></div>
+        </div>
+        <div class="hud-buttons">
+          <button id="soundButton" class="icon-button" type="button" aria-label="Звук" title="Звук">◖))</button>
+          <button id="pauseButton" class="icon-button" type="button" aria-label="Пауза" title="Пауза (Esc)">II</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ГЛАВНОЕ МЕНЮ ================= -->
+    <section id="menu" class="screen menu-screen">
+      <div class="menu-card">
+        <div class="eyebrow">ТОЧНАЯ ПЛАТФОРМЕННАЯ АРКАДА</div>
+        <h1>NEON<span>//</span><br>VECTOR</h1>
+        <p class="tagline">Инерция — это ресурс.<br>Скользи, отталкивайся от стен, держи скорость.</p>
+        <button id="playButton" class="primary-button" type="button"><span>НАЧАТЬ</span><b>→</b></button>
+        <div class="menu-actions">
+          <button id="levelsButton" class="secondary-button" type="button"><span>УРОВНИ</span><b id="levelsProgress">0/0</b></button>
+          <button id="recordsButton" class="secondary-button" type="button"><span>РЕКОРДЫ</span><b id="recordCount">0</b></button>
+        </div>
+        <div class="controls-hint">
+          <div><kbd>A</kbd><kbd>D</kbd><span>движение</span></div>
+          <div><kbd>Space</kbd><span>прыжок</span></div>
+          <div><kbd>Shift</kbd><span>скользить</span></div>
+          <div><kbd>J</kbd><span>рывок</span></div>
+        </div>
+      </div>
+      <div class="version-tag">v1.0 // PRECISION PLATFORMER</div>
+    </section>
+
+    <!-- ================= ВЫБОР УРОВНЯ ================= -->
+    <section id="levelSelect" class="screen list-screen is-hidden" aria-labelledby="levelsTitle">
+      <div class="list-card">
+        <div class="list-header">
+          <div>
+            <div class="eyebrow">ВЫБОР ЭТАЖА</div>
+            <h2 id="levelsTitle">УРОВНИ</h2>
+          </div>
+          <button id="closeLevelsButton" class="icon-button" type="button" aria-label="Закрыть">×</button>
+        </div>
+        <div id="levelGrid" class="level-grid"></div>
+        <div class="list-footer">
+          <span>Открыто уровней: <strong id="unlockedValue">0</strong> из <strong id="totalValue">0</strong></span>
+          <button id="levelsBackButton" class="text-button" type="button">В меню</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= РЕКОРДЫ ================= -->
+    <section id="records" class="screen list-screen is-hidden" aria-labelledby="recordsTitle">
+      <div class="list-card">
+        <div class="list-header">
+          <div>
+            <div class="eyebrow">ЛИЧШИЕ ВРЕМЕНА</div>
+            <h2 id="recordsTitle">РЕКОРДЫ</h2>
+          </div>
+          <button id="closeRecordsButton" class="icon-button" type="button" aria-label="Закрыть">×</button>
+        </div>
+        <div id="recordList" class="record-list"></div>
+        <div class="list-footer">
+          <span>Всего осколков: <strong id="totalShards">0</strong></span>
+          <button id="recordsBackButton" class="text-button" type="button">Назад</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ПАУЗА ================= -->
+    <section id="pauseScreen" class="screen pause-screen is-hidden">
+      <div class="pause-card">
+        <div class="eyebrow">ПАУЗА</div>
+        <h2>ОСТАНОВКА</h2>
+        <div class="pause-stats" id="pauseStats"></div>
+        <button id="resumeButton" class="primary-button" type="button"><span>ПРОДОЛЖИТЬ</span><b>→</b></button>
+        <button id="retryButton" class="secondary-button" type="button"><span>НАЧАТЬ ЗАНОВО</span><b>↻</b></button>
+        <button id="pauseLevelsButton" class="text-button" type="button">К списку уровней</button>
+      </div>
+    </section>
+
+    <!-- ================= ФИНИШ УРОВНЯ ================= -->
+    <section id="clearScreen" class="screen pause-screen is-hidden">
+      <div class="pause-card result-card">
+        <div class="eyebrow">ВЕКТОР СОХРАНЁН</div>
+        <h2>УРОВЕНЬ ПРОЙДЕН</h2>
+        <div class="result-score"><span>ВРЕМЯ</span><strong id="clearTime">0.00</strong></div>
+        <div class="result-row"><span>Осколки</span><strong id="clearShards">0/0</strong></div>
+        <div class="result-row"><span>Падений</span><strong id="clearDeaths">0</strong></div>
+        <div class="result-row"><span>Лучшее время</span><strong id="clearBest">—</strong></div>
+        <div class="result-row time-row"><span>Итог</span><strong id="clearDelta">—</strong></div>
+        <div class="new-record is-hidden" id="clearRecord">НОВЫЙ РЕКОРД //</div>
+        <div class="unlock-note is-hidden" id="clearUnlock"></div>
+        <button id="nextButton" class="primary-button" type="button"><span>СЛЕДУЮЩИЙ УРОВЕНЬ</span><b>→</b></button>
+        <button id="clearRetryButton" class="secondary-button" type="button"><span>ЕЩЁ РАЗ</span><b>↻</b></button>
+        <button id="clearLevelsButton" class="text-button" type="button">К списку уровней</button>
+      </div>
+    </section>
+
+    <div id="toast" class="toast" role="status"></div>
+  </main>
+  <script src="levels.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
