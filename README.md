@@ -1,5 +1,7 @@
 # YandexGame
 
+
+[![CI](https://github.com/Teivrim/YandexGame/actions/workflows/ci.yml/badge.svg)](https://github.com/Teivrim/YandexGame/actions/workflows/ci.yml) [![license](https://img.shields.io/badge/license-MIT-5eead4.svg)](LICENSE) [![lines](https://img.shields.io/badge/lines-of%20code-lightgrey.svg)]()
 Здесь лежат пять браузерных игр на чистых HTML, CSS и JavaScript с Canvas 2D. Unity, Unreal и игровые движки не нужны.
 
 | Проект | Жанр | Состояние |
