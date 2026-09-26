@@ -84,6 +84,16 @@
       hair: '#4a2a6a', hairDark: '#2a1440', hairLight: '#8a5ab0',
       outfit: '#2a2040', outfitDark: '#170f26',
       accent: '#63e7ff', eye: '#b6ff3d', hairStyle: 'hood', scale: 0.96, ai: 'thrower'
+    },
+    // Щитоносец держит щит спереди: удар в лоб отскакивает, обойти можно
+    // только уходом вглубь или приёмом. Это заставляет работать осью W и S.
+    jitte: {
+      name: 'ДЖИТТЕ', hp: 88, speed: 46, power: 1.2, score: 300,
+      skin: '#8ea8c8', skinDark: '#5f7690',
+      hair: '#c8d4e4', hairDark: '#7d8a9e', hairLight: '#ffffff',
+      outfit: '#1e2c44', outfitDark: '#101a2c',
+      accent: '#63e7ff', eye: '#ff6ea8', hairStyle: 'mask', scale: 1.14, ai: 'melee',
+      guard: true, shield: '#8fd8f0'
     }
   };
 
@@ -108,6 +118,13 @@
       hair: '#2a0a3a', hairDark: '#150520', hairLight: '#7a3aa0',
       outfit: '#1a0a2a', outfitDark: '#0c0414',
       accent: '#9d7bff', eye: '#b6ff3d', hairStyle: 'crown', scale: 1.6, ai: 'melee', boss: true
+    },
+    kuro: {
+      name: 'КУРО', hp: 900, speed: 62, power: 2.2, score: 5000,
+      skin: '#2e2e40', skinDark: '#15151f',
+      hair: '#e8e0d0', hairDark: '#a89a88', hairLight: '#ffffff',
+      outfit: '#08080f', outfitDark: '#000000',
+      accent: '#b6ff3d', eye: '#ff3d6e', hairStyle: 'crown', scale: 1.78, ai: 'melee', boss: true
     }
   };
 
@@ -670,6 +687,42 @@
       g.fillRect(-2, -5, 6, 10);
       g.restore();
     }
+    // Щит держится перед собой: именно он отбивает удар спереди
+    if (def.shield) {
+      const sp = joint(2, shoulderY + 6, 0.12, 30);
+      g.save();
+      g.translate(sp.x, sp.y);
+      g.rotate(-0.12);
+      g.fillStyle = INK;
+      g.beginPath();
+      g.moveTo(0, -30);
+      g.quadraticCurveTo(9, -22, 8, 2);
+      g.quadraticCurveTo(6, 24, 0, 30);
+      g.quadraticCurveTo(-6, 24, -7, 2);
+      g.quadraticCurveTo(-8, -22, 0, -30);
+      g.closePath();
+      g.fill();
+      g.fillStyle = def.shield;
+      g.beginPath();
+      g.moveTo(0, -27);
+      g.quadraticCurveTo(7, -20, 6, 2);
+      g.quadraticCurveTo(4, 21, 0, 26);
+      g.quadraticCurveTo(-5, 21, -6, 2);
+      g.quadraticCurveTo(-7, -20, 0, -27);
+      g.closePath();
+      g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.4)';
+      g.beginPath();
+      g.moveTo(0, -22);
+      g.quadraticCurveTo(3, -16, 2, 4);
+      g.lineTo(-1, 4);
+      g.quadraticCurveTo(-1, -16, 0, -22);
+      g.closePath();
+      g.fill();
+      g.fillStyle = shade(def.shield, -50);
+      g.fillRect(-8, -3, 16, 3);
+      g.restore();
+    }
 
     g.restore();
     g.restore();
@@ -696,6 +749,12 @@
       accent: '#63e7ff', lantern: '#9d7bff', rain: false, width: 2700,
       waves: [['tori', 'tori', 'kozame'], ['kozame', 'kozame', 'kozame', 'oni'], ['tori', 'kozame', 'oni', 'kodama']],
       boss: 'mura'
+    },
+    {
+      name: 'СТАНЦИЯ КОГЭН', sky: ['#0d1a1e', '#04090c'], ground: '#12222a',
+      accent: '#b6ff3d', lantern: '#e8f4ff', rain: false, width: 3000,
+      waves: [['jitte', 'oni', 'kodama'], ['jitte', 'jitte', 'tori', 'oni'], ['jitte', 'kozame', 'kozame', 'tori']],
+      boss: 'kuro', indoor: true
     }
   ];
 
@@ -860,7 +919,8 @@
       state: 'walk', stateT: 0, hitDone: false,
       hitFlash: 0, invuln: 0, attackCd: 0.5 + Math.random() * 0.6,
       launchT: 0, walkPhase: Math.random() * 6, pose: makePose(),
-      dead: false, deathT: 0, ai: def.ai, score: def.score
+      dead: false, deathT: 0, ai: def.ai, score: def.score,
+      guard: !!def.guard, guardHit: 0
     };
   }
 
@@ -1018,6 +1078,7 @@
     if (p.hitDone) return;
     const box = attackBox(p);
     let hitAny = false;
+    let blockedAny = false;
     for (const e of run.foes) {
       if (e.dead) continue;
       const h = BODY_H * e.scale * FIG;
@@ -1025,6 +1086,19 @@
       const bot = e.y - 8 * FIG;
       if (e.x + 22 * e.scale * FIG < box.x || e.x - 22 * e.scale * FIG > box.x + box.w) continue;
       if (bot < box.y || top > box.y + box.h) continue;
+      // Щитоносец держит щит спереди: удар в лоб только отскакивает.
+      // Обойти можно уходом вглубь (W и S) или приёмом, который бьёт
+      // с обхода. Именно это заставляет пользоваться осью глубины.
+      if (e.guard && e.facing === p.facing) {
+        if (!blockedAny) {
+          blockedAny = true;
+          burst(e.x + p.facing * 20 * e.scale * FIG, e.y - 60 * e.scale * FIG, 7, '#cfe8ff');
+          tone(900, 0.05, 'square', 0.022, -300);
+          run.shake = Math.max(run.shake, 3);
+          p.hitDone = true;
+        }
+        continue;
+      }
       hitFoe(e, COMBO_DMG[p.attackIndex] * p.def.power, COMBO_PUSH[p.attackIndex], COMBO_LIFT[p.attackIndex]);
       hitAny = true;
     }
@@ -1041,8 +1115,11 @@
     }
   }
 
-  function hitFoe(e, dmg, push, lift) {
+  function hitFoe(e, dmg, push, lift, ignoreGuard) {
     const p = run.p;
+    // Приём проходит сквозь щит: это единственный прямой способ пробить
+    // щитоносца, если нет запаса по глубине.
+    if (e.guard && e.facing === p.facing && !ignoreGuard) return false;
     e.hp -= dmg;
     e.hitFlash = 0.12;
     e.vx += p.facing * push;
@@ -1059,6 +1136,7 @@
       e.stateT = 0;
     }
     if (e.hp <= 0) killFoe(e);
+    return true;
   }
 
   function killFoe(e) {
@@ -1188,7 +1266,7 @@
         p.specialHit = true;
         for (const e of run.foes) {
           if (e.dead) continue;
-          if (Math.abs(e.x - p.x) < 115 * FIG && Math.abs(e.y - p.y) < 42 * FIG) hitFoe(e, 22 * def.power, 300, 22);
+          if (Math.abs(e.x - p.x) < 115 * FIG && Math.abs(e.y - p.y) < 42 * FIG) hitFoe(e, 22 * def.power, 300, 22, true);
         }
         run.shake = Math.max(run.shake, 12);
         burst(p.x + 40 * FIG * p.facing, p.y - 26 * FIG, 18, def.accent);
@@ -1520,8 +1598,19 @@
 
   function finishStage() {
     if (mode !== 'playing') return;
-    mode = 'clear';
     const idx = stage.index;
+
+    // Последняя улица пройдена — это победа, а не экран «следующая улица».
+    // Раньше endRun(true) не вызывался нигде, и победа была недостижима.
+    if (idx + 1 >= STAGES.length) {
+      if (run.score > profile.best) profile.best = run.score;
+      if (STAGES.length > profile.bestStage) profile.bestStage = STAGES.length;
+      saveProfile();
+      endRun(true);
+      return;
+    }
+
+    mode = 'clear';
     if (run.score > profile.best) profile.best = run.score;
     if (idx + 1 > profile.bestStage) profile.bestStage = idx + 1;
     saveProfile();
@@ -1540,7 +1629,7 @@
     } else {
       els.clearUnlock.classList.add('is-hidden');
     }
-    els.nextStageButton.style.display = nextIdx < STAGES.length ? '' : 'none';
+    els.nextStageButton.style.display = '';
     hideAll();
     els.stageClear.classList.remove('is-hidden');
     updateProfileUi();
@@ -1555,7 +1644,9 @@
     if (won) {
       els.overEyebrow.textContent = 'ТОКИО УСПОКОИЛОСЬ';
       els.overTitle.textContent = 'ПОБЕДА';
-      els.overCopy.textContent = 'Все три улицы за тобой.';
+      // Без числительного: «все 3 улицы» и «все 4 улицы» требуют разного
+      // падежа, и текст протухал бы при каждой новой сцене.
+      els.overCopy.textContent = 'Токио снова твой. Последний босс убрался в тоннель.';
     } else {
       els.overEyebrow.textContent = 'ТЕМНОТА СГУСТИЛАСЬ';
       els.overTitle.textContent = 'ПОРАЖЕНИЕ';
@@ -1639,6 +1730,9 @@
     ctx.lineTo(viewport.w, gy - 172);
     ctx.stroke();
     ctx.globalAlpha = 1;
+
+    // В помещении фасад другой: плитка, колонны и трубы под потолком
+    if (def.indoor) { drawStation(gy, wallTop); return; }
 
     // неоновые вывески
     const sw = 300;
@@ -1729,6 +1823,77 @@
     }
   }
 
+  // Перрон метро вместо уличного фасада: плитка, колонны, лампы в ряд.
+  function drawStation(gy, wallTop) {
+    const def = stage.def;
+    ctx.strokeStyle = 'rgba(210,235,240,0.07)';
+    ctx.lineWidth = 1;
+    for (let y = wallTop + 60; y < gy; y += 22) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(viewport.w, y); ctx.stroke();
+    }
+    const tw = 44;
+    const toff = (run.camX * 0.62) % tw;
+    for (let i = -1; i < viewport.w / tw + 2; i++) {
+      const x = i * tw - toff;
+      ctx.beginPath(); ctx.moveTo(x, wallTop + 60); ctx.lineTo(x, gy); ctx.stroke();
+    }
+    // колонны
+    const cw = 190;
+    const coff = (run.camX * 0.72) % cw;
+    for (let i = -1; i < viewport.w / cw + 2; i++) {
+      const x = i * cw - coff + 30;
+      ctx.fillStyle = 'rgba(30,52,58,0.95)';
+      ctx.fillRect(x, wallTop + 74, 26, gy - wallTop - 74);
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      ctx.fillRect(x, wallTop + 74, 7, gy - wallTop - 74);
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.fillRect(x + 20, wallTop + 74, 6, gy - wallTop - 74);
+    }
+
+    // Полоса с названием станции рисуется после колонн, иначе колонны
+    // перекрывают буквы ровно в том месте, где они стоят.
+    ctx.fillStyle = 'rgba(6,16,20,0.96)';
+    ctx.fillRect(0, gy - 156, viewport.w, 44);
+    ctx.strokeStyle = 'rgba(210,235,240,0.12)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, gy - 155.5, viewport.w - 1, 43);
+    ctx.fillStyle = 'rgba(232,244,255,0.85)';
+    ctx.font = '700 22px "Arial Black", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    const nameX = ((-run.camX * 0.62) % 620 + 620) % 620;
+    ctx.fillText('КОГЭН', nameX + 44, gy - 134);
+    ctx.fillStyle = def.accent;
+    ctx.fillRect(nameX + 176, gy - 138, 70, 5);
+    ctx.textBaseline = 'alphabetic';
+
+    // Лампы под потолком
+    const lw = 240;
+    const loff = (run.camX * 0.72) % lw;
+    for (let i = -1; i < viewport.w / lw + 2; i++) {
+      const x = i * lw - loff + 60;
+      const y = wallTop + 34;
+      // конус света, а не прямоугольник: иначе лампа выглядит серой колонной
+      ctx.fillStyle = def.lantern;
+      ctx.globalAlpha = 0.07;
+      ctx.beginPath();
+      ctx.moveTo(x, y + 4);
+      ctx.lineTo(x + 44, y + 4);
+      ctx.lineTo(x + 84, gy);
+      ctx.lineTo(x - 40, gy);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = 'rgba(20,34,40,0.95)';
+      ctx.fillRect(x - 8, y - 9, 60, 9);
+      ctx.fillStyle = def.lantern;
+      ctx.shadowColor = def.lantern;
+      ctx.shadowBlur = 20;
+      ctx.fillRect(x, y, 44, 4);
+      ctx.shadowBlur = 0;
+    }
+  }
+
   function drawBackground() {
     const def = stage.def;
     const g = ctx.createLinearGradient(0, 0, 0, groundY());
@@ -1737,30 +1902,45 @@
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, viewport.w, viewport.h);
 
-    // луна с ореолом, окрашенная под палитру сцены
-    const mx = viewport.w * 0.78;
-    const my = viewport.h * 0.14;
-    ctx.fillStyle = def.lantern;
-    ctx.globalAlpha = 0.05;
-    ctx.beginPath();
-    ctx.arc(mx, my, 92, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 0.12;
-    ctx.beginPath();
-    ctx.arc(mx, my, 44, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 0.3;
-    ctx.beginPath();
-    ctx.arc(mx, my, 27, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 0.14;
-    ctx.beginPath();
-    ctx.arc(mx - 8, my + 6, 5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(mx + 10, my - 8, 3.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
+    // Луна с ореолом, окрашенная под палитру сцены.
+    // В помещении её быть не должно: станция метро под землёй.
+    if (!def.indoor) {
+      const mx = viewport.w * 0.78;
+      const my = viewport.h * 0.14;
+      ctx.fillStyle = def.lantern;
+      ctx.globalAlpha = 0.05;
+      ctx.beginPath();
+      ctx.arc(mx, my, 92, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.12;
+      ctx.beginPath();
+      ctx.arc(mx, my, 44, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.3;
+      ctx.beginPath();
+      ctx.arc(mx, my, 27, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.14;
+      ctx.beginPath();
+      ctx.arc(mx - 8, my + 6, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(mx + 10, my - 8, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    } else {
+      // Вместо луны — вентиляционные трубы под потолком
+      ctx.strokeStyle = 'rgba(150,190,200,0.14)';
+      ctx.lineWidth = 5;
+      const py = viewport.h * 0.1;
+      for (let i = 0; i < 3; i++) {
+        const y = py + i * 15;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(viewport.w, y);
+        ctx.stroke();
+      }
+    }
 
     drawSkyline(0.12, 'rgba(28,14,44,0.85)', groundY() + 6, 1);
     drawSkyline(0.26, 'rgba(18,8,32,0.9)', groundY() + 10, 0.72);
@@ -2459,6 +2639,50 @@
           }
         },
         spawnBoss: () => { if (run && !run.bossSpawned) { run.wave = stage.def.waves.length + 1; spawnBoss(); } },
+        count: () => STAGES.length,
+        bossHp: () => { const b = run && run.foes.find((f) => f.boss && !f.dead); return b ? b.hp + '/' + b.maxHp : null; },
+        // Поставить конкретного врага рядом с игроком
+        spawnFoe: (type) => {
+          if (!run) return false;
+          const p = run.p;
+          const f = makeFoe(type, p.x + p.facing * 60, p.y);
+          run.foes.push(f);
+          return true;
+        },
+        // Список врагов с HP, чтобы проверять щит снаружи
+        foes: () => (run ? run.foes.filter((f) => !f.dead).map((f) => ({ type: f.type, hp: f.hp, facing: f.facing, guard: !!f.guard })) : []),
+        // Развернуть щит: true — щит лицом к игроку, удар блокируется
+        faceGuard: (toPlayer) => {
+          const g = run && run.foes.find((f) => f.guard && !f.dead);
+          if (!g) return 'нет щитоносца';
+          g.facing = toPlayer ? run.p.facing : -run.p.facing;
+          return g.facing;
+        },
+        // Один удар текущим ударом комбо
+        punch: () => { const p = run && run.p; if (!p) return 'нет игрока'; p.hitDone = false; doHit(); return 'удар'; },
+        // Приём целиком, без ожидания кадра
+        doSpecial: () => {
+          const p = run && run.p;
+          if (!p) return 'нет игрока';
+          p.state = 'special'; p.stateT = 0; p.specialT = 0; p.specialHit = false;
+          return 'приём';
+        },
+        // Чистый стенд: убрать всех и оставить ровно одного врага заданного типа
+        soloFoe: (type) => {
+          if (!run) return null;
+          const p = run.p;
+          run.foes = run.foes.filter((f) => f.dead);
+          const f = makeFoe(type, p.x + p.facing * 55, p.y);
+          f.vx = 0; f.attackCd = 99;
+          run.foes.push(f);
+          return { hp: f.hp, facing: f.facing, guard: !!f.guard, x: Math.round(f.x), px: Math.round(p.x) };
+        },
+        // Живой объект щитоносца для чтения HP
+        guard: () => {
+          if (!run) return null;
+          const g = run.foes.find((f) => !f.dead);
+          return g ? { hp: g.hp, maxHp: g.maxHp, type: g.type, facing: g.facing, guard: !!g.guard } : null;
+        },
         hurt: (n) => {
           if (!run || !run.p) return;
           run.p.hp -= (n || 10);
