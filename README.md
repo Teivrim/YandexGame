@@ -10,9 +10,9 @@
 | [NEON//BASTION](neon-bastion/README.md) | башенная оборона | 30 волн, опубликована на itch.io |
 | [NEON//DESCENT](neon-descent/README.md) | roguelite | 10 этажей, 3 класса, опубликована на itch.io |
 | [NEON//VECTOR](neon-vector/README.md) | точная платформенная аркада | 8 уровней, рекорды времени, опубликована на itch.io |
-| [NEON//ONI](neon-oni/README.md) | бит-эм-ап с аниме-стилизацией | 3 улицы, 3 босса, 3 бойца, в разработке |
+| [NEON//ONI](neon-oni/README.md) | бит-эм-ап с аниме-стилизацией | 3 улицы, 3 босса, 3 бойца, опубликована на itch.io |
 
-Архивы для загрузки: `neon-courier-yandex.zip`, `neon-bastion-itch.zip`, `neon-descent-itch.zip` и `neon-vector-itch.zip`.
+Архивы для загрузки: `neon-courier-yandex.zip`, `neon-bastion-itch.zip`, `neon-descent-itch.zip`, `neon-vector-itch.zip` и `neon-oni-itch.zip`.
 Ассеты для листингов: `yandex-assets/`, `bastion-assets/`, `descent-assets/`, `vector-assets/` и `oni-assets/`.
 
 ---

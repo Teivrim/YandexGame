@@ -280,8 +280,12 @@
     g.lineTo(-hw * 0.82, -hh * 0.84);
     g.closePath();
     g.fill();
-    // тонкий контур: толстый обводит каждую прядь и превращает чёлку в пилу
-    inkStroke(g, 1.5);
+    // Контур пряди красится её же тёмным оттенком, а не чёрным:
+    // при крупном увеличении чёрная обводка превращает чёлку в пилу.
+    g.strokeStyle = shade(color, -70);
+    g.lineWidth = 1.6;
+    g.lineJoin = 'round';
+    g.stroke();
 
     // блик на макушке
     g.fillStyle = light;
@@ -1436,19 +1440,24 @@
     updateHud();
   }
 
-  // Враги должны вбегать за краем экрана, а не появляться у края карты:
-  // иначе на старте улица пустая и непонятно, куда идти.
+  // Враги вбегают с той стороны, где за игроком больше свободного места.
+  // Если выбирать по камере, у левого края карты они появятся вплотную
+  // и окажутся за границей экрана.
+  function spawnSide() {
+    const roomLeft = run.p.x - 70;
+    const roomRight = stage.width - 70 - run.p.x;
+    return roomRight >= roomLeft ? 1 : -1;
+  }
+
   function spawnWave() {
     const list = stage.def.waves[run.wave];
     const baseY = groundY();
-    const distToLeft = run.p.x - run.camX;
-    const fromRight = distToLeft > viewport.w * 0.45;
-    const edge = fromRight
-      ? Math.min(stage.width - 30, run.camX + viewport.w + 44)
-      : Math.max(30, run.camX - 44);
-    const dir = fromRight ? 1 : -1;
+    const dir = spawnSide();
+    const edge = dir > 0
+      ? Math.min(stage.width - 40, run.camX + viewport.w + 44)
+      : Math.max(40, run.camX - 44);
     list.forEach((type, i) => {
-      const x = Math.max(24, Math.min(stage.width - 24, edge + dir * (i * 56 + Math.random() * 34)));
+      const x = Math.max(28, Math.min(stage.width - 28, edge + dir * (i * 58 + Math.random() * 34)));
       const y = baseY + Math.random() * FLOOR_DEPTH * 0.78;
       run.foes.push(makeFoe(type, x, y));
     });
@@ -1458,9 +1467,11 @@
   }
 
   function spawnBoss() {
-    const fromRight = run.p.x - run.camX > viewport.w * 0.45;
-    const x = fromRight ? run.camX + viewport.w + 70 : run.camX - 70;
-    run.foes.push(makeFoe(stage.def.boss, Math.max(40, Math.min(stage.width - 40, x)), groundY() + 30, 1 + stage.index * 0.35));
+    const dir = spawnSide();
+    const x = dir > 0
+      ? Math.min(stage.width - 60, run.camX + viewport.w + 80)
+      : Math.max(60, run.camX - 80);
+    run.foes.push(makeFoe(stage.def.boss, x, groundY() + 30, 1 + stage.index * 0.35));
     run.bossSpawned = true;
     showBanner(BOSSES[stage.def.boss].name);
   }
@@ -2438,6 +2449,113 @@
         _p: () => (run && run.p ? { x: run.p.x, y: run.p.y, z: run.p.z, vx: run.p.vx, vz: run.p.vz, state: run.p.state } : null),
         groundY: () => groundY(),
         view: () => ({ w: viewport.w, h: viewport.h, camX: run ? run.camX : 0, floor: FLOOR_DEPTH }),
+
+        // Карточки для листинга: иконка и обложка рисуются теми же
+        // бойцами, что и в игре, поэтому стиль не разъезжается.
+        card: (w, h, kind) => {
+          const cv = document.createElement('canvas');
+          cv.width = w;
+          cv.height = h;
+          const g = cv.getContext('2d');
+          const hero = FIGHTERS.yuki;
+          const icon = kind === 'icon';
+          const accent = icon ? '#ff6ea8' : '#ffb44f';
+
+          const bg = g.createLinearGradient(0, 0, w, h);
+          bg.addColorStop(0, '#31123f');
+          bg.addColorStop(0.55, '#170829');
+          bg.addColorStop(1, '#0a0414');
+          g.fillStyle = bg;
+          g.fillRect(0, 0, w, h);
+
+          // неоновая сетка
+          g.strokeStyle = 'rgba(255,110,168,0.14)';
+          g.lineWidth = Math.max(1, w / 480);
+          for (let i = 0; i <= 8; i++) {
+            g.beginPath(); g.moveTo((i / 8) * w, 0); g.lineTo((i / 8) * w, h); g.stroke();
+          }
+          for (let i = 0; i <= 6; i++) {
+            g.beginPath(); g.moveTo(0, (i / 6) * h); g.lineTo(w, (i / 6) * h); g.stroke();
+          }
+
+          // Раскладка. На иконке берётся фигура целиком: силуэт с хвостами
+          // читается в мелком значке лучше, чем портрет с чёлкой.
+          const heroScale = icon ? w / 158 : h / 180;
+          const heroX = icon ? w * 0.5 : w * 0.74;
+          const heroY = icon ? h * 1.0 : h * 1.04;
+          const foeScale = icon ? w / 235 : h / 250;
+
+          const foes = icon
+            ? [['kozame', 0.1, 1.0], ['oni', 0.9, 0.95]]
+            : [['kozame', 0.34, 0.9], ['oni', 0.47, 0.85], ['tori', 0.58, 0.8]];
+          foes.forEach((f) => {
+            g.save();
+            g.globalAlpha = icon ? 0.42 : 0.62;
+            g.filter = 'blur(1.5px)';
+            g.translate(w * f[1], h * 1.06);
+            g.scale(foeScale * f[2], foeScale * f[2]);
+            const pz = makePose();
+            pz.armF = 0.9; pz.foreF = -0.5; pz.armB = -0.5; pz.foreB = -0.2;
+            pz.thighF = 0.34; pz.shinF = -0.3; pz.thighB = -0.4; pz.shinB = -0.2;
+            pz.lean = 0.3; pz.crouch = 0.8;
+            drawFighter(g, FOES[f[0]], 0, 0, 1, 1, pz, {});
+            g.restore();
+          });
+
+          // ореол за героем — силуэт должен читаться на мелком значке
+          const halo = g.createRadialGradient(heroX, h * 0.46, 0, heroX, h * 0.46, h * 0.6);
+          halo.addColorStop(0, icon ? 'rgba(255,110,168,0.34)' : 'rgba(255,180,79,0.2)');
+          halo.addColorStop(1, 'rgba(255,110,168,0)');
+          g.fillStyle = halo;
+          g.fillRect(0, 0, w, h);
+
+          // герой
+          g.save();
+          g.translate(heroX, heroY);
+          g.scale(heroScale, heroScale);
+          const hp = makePose();
+          hp.armF = icon ? -0.5 : -0.5;
+          hp.foreF = icon ? -0.9 : -0.9;
+          hp.armB = -0.4; hp.foreB = -0.7;
+          hp.thighF = 0.4; hp.shinF = -0.34; hp.thighB = -0.46; hp.shinB = -0.2;
+          hp.lean = 0.26; hp.crouch = 0.9;
+          drawFighter(g, hero, 0, 0, 1, 1, hp, {});
+          g.restore();
+
+          if (!icon) {
+            // затемнение слева, чтобы название читалось поверх фона
+            const sc = g.createLinearGradient(0, 0, w * 0.72, 0);
+            sc.addColorStop(0, 'rgba(8,3,16,0.92)');
+            sc.addColorStop(0.6, 'rgba(8,3,16,0.55)');
+            sc.addColorStop(1, 'rgba(8,3,16,0)');
+            g.fillStyle = sc;
+            g.fillRect(0, 0, w, h);
+
+            g.textAlign = 'left';
+            g.font = '900 ' + Math.round(h * 0.23) + 'px "Arial Black", sans-serif';
+            g.fillStyle = '#ffd7e6';
+            g.shadowColor = '#ff3d6e';
+            g.shadowBlur = 24;
+            g.fillText('NEON', w * 0.05, h * 0.4);
+            g.shadowBlur = 0;
+            g.fillStyle = accent;
+            g.shadowColor = accent;
+            g.shadowBlur = 24;
+            g.fillText('//ONI', w * 0.05, h * 0.66);
+            g.shadowBlur = 0;
+            g.fillStyle = 'rgba(255,225,240,0.9)';
+            g.font = '700 ' + Math.round(h * 0.05) + 'px "Arial Black", sans-serif';
+            g.fillText('БИТ-ЭМ-АП · НОЧНОЙ ТОКИО', w * 0.05, h * 0.77);
+          }
+
+          // рамка
+          g.strokeStyle = accent;
+          g.globalAlpha = 0.65;
+          g.lineWidth = Math.max(2, w / 190);
+          g.strokeRect(g.lineWidth, g.lineWidth, w - g.lineWidth * 2, h - g.lineWidth * 2);
+          g.globalAlpha = 1;
+          return cv.toDataURL('image/png');
+        },
         // Лист персонажей крупным планом: единственный способ честно
         // проверить арт, не разглядывая 40-пиксельную голову в бою.
         sheet: (headOnly) => {
