@@ -1,11 +1,15 @@
 /**
- * Собирает игру в ОДИН самодостаточный HTML-файл, совместимый с очень старыми
- * системными WebView (Android 5.x без Google-сервисов -> Chrome 37).
+ * Универсальный сборщик: превращает веб-игру в ОДИН самодостаточный HTML-файл,
+ * совместимый с очень старыми системными WebView (Android 5.x без Google-сервисов
+ * -> Chrome 37).
  *
- * Что делает:
- *  1) транспилирует game.js в ES5 через Babel (стрелки, for..of, let/const -> старый синтаксис);
- *  2) добавляет точечные polyfill для API, которых нет в старых движках;
- *  3) встраивает CSS и JS прямо в разметку, чтобы не зависеть от file://-путей.
+ * Зачем это нужно:
+ *  - APK не должен зависеть от файловой системы: всё лежит в assets;
+ *  - в Chrome 37 нет ни стрелочных функций, ни for..of, ни Set/Map,
+ *    ни String.padStart, поэтому JS транспилируется в ES5 через Babel;
+ *  - добавляются polyfill для API, которых в старых движках нет.
+ *
+ * usage: node build-bundle.js <src-dir> <out.html> [skip.js,skip.js]
  */
 const fs = require('node:fs');
 const path = require('node:path');
@@ -13,35 +17,29 @@ const babel = require('@babel/core');
 
 const srcDir = process.argv[2];
 const outFile = process.argv[3];
+const skip = new Set((process.argv[4] || '').split(',').map((s) => s.trim()).filter(Boolean));
+
 if (!srcDir || !outFile) {
-  console.error('usage: node build-apk-bundle.js <src-dir> <out.html>');
+  console.error('usage: node build-bundle.js <src-dir> <out.html> [skip.js,...]');
   process.exit(1);
 }
 
 const html = fs.readFileSync(path.join(srcDir, 'index.html'), 'utf8');
-const css = fs.readFileSync(path.join(srcDir, 'style.css'), 'utf8');
-const js = fs.readFileSync(path.join(srcDir, 'game.js'), 'utf8');
 
-// 1) ES5-транспиляция. Никаких browser-целей: нужен именно старый синтаксис.
-const transpiled = babel.transformSync(js, {
-  babelrc: false,
-  configFile: false,
-  presets: [
-    ['@babel/preset-env', {
-      targets: { ie: '11' },
-      modules: false
-    }]
-  ]
-}).code;
+/** Транспилирует один JS-файл в ES5. */
+function toEs5(code) {
+  return babel.transformSync(code, {
+    babelrc: false,
+    configFile: false,
+    presets: [['@babel/preset-env', { targets: { ie: '11' }, modules: false }]]
+  }).code;
+}
 
-// 2) Polyfill того, что Chrome 37 не умеет, но использует игра.
 const polyfill = `
 (function () {
-  // Number.isFinite
   if (typeof Number.isFinite !== 'function') {
     Number.isFinite = function (v) { return typeof v === 'number' && isFinite(v); };
   }
-  // String.prototype.padStart
   if (typeof String.prototype.padStart !== 'function') {
     String.prototype.padStart = function (len, pad) {
       var s = String(this);
@@ -51,7 +49,6 @@ const polyfill = `
       return s;
     };
   }
-  // Array.prototype.includes / Object.assign / Math.trunc
   if (typeof Array.prototype.includes !== 'function') {
     Array.prototype.includes = function (v) { return this.indexOf(v) !== -1; };
   }
@@ -67,11 +64,10 @@ const polyfill = `
   if (typeof Math.trunc !== 'function') {
     Math.trunc = function (v) { return v < 0 ? Math.ceil(v) : Math.floor(v); };
   }
-  // Map и Set нужны игре; на очень старых движках их нет
   if (typeof Map === 'undefined') {
-    var MapShim = function () { this._d = {}; this._s = 0; };
-    MapShim.prototype.set = function (k, v) { this._d['@' + k] = v; this._s++; return this; };
-    MapShim.prototype.get = function (k) { var v = this._d['@' + k]; return v === undefined ? undefined : v; };
+    var MapShim = function () { this._d = {}; };
+    MapShim.prototype.set = function (k, v) { this._d['@' + k] = v; return this; };
+    MapShim.prototype.get = function (k) { return this._d['@' + k]; };
     MapShim.prototype.has = function (k) { return this._d['@' + k] !== undefined; };
     MapShim.prototype.delete = function (k) { delete this._d['@' + k]; };
     MapShim.prototype.clear = function () { this._d = {}; };
@@ -84,26 +80,38 @@ const polyfill = `
     SetShim.prototype.has = function (v) { return this._a.indexOf(v) !== -1; };
     SetShim.prototype.delete = function (v) { var i = this._a.indexOf(v); if (i >= 0) this._a.splice(i, 1); };
     SetShim.prototype.forEach = function (fn) { for (var i = 0; i < this._a.length; i++) fn(this._a[i], this._a[i]); };
-    SetShim.prototype.size = 0;
     this.Set = SetShim;
   }
 })();
 `;
 
-// 3) Сборка одного файла
-let out = html
-  .replace(/<link rel="stylesheet" href="style\.css">/, '<style>\n' + css + '\n  </style>')
-  .replace(/<script src="game\.js"><\/script>/, '<script>\n' + polyfill + '\n' + transpiled + '\n  </script>')
-  .replace(/<link rel="stylesheet" href="[^"]*">/g, '')
-  .replace(/<script src="[^"]*"><\/script>/g, '');
+// CSS: встраиваем все подключённые таблицы стилей
+let out = html.replace(/<link[^>]+rel=["']stylesheet["'][^>]*>/g, (tag) => {
+  const href = (tag.match(/href=["']([^"']+)["']/) || [])[1];
+  if (!href) return tag;
+  return '<style>\n' + fs.readFileSync(path.join(srcDir, href), 'utf8') + '\n  </style>';
+});
 
-// Контроль: внешних ссылок остаться не должно
-if (/src="game\.js"|href="style\.css"/.test(out)) {
+// JS: встраиваем и транспилируем, пропуская ненужные файлы
+const inlined = [];
+out = out.replace(/<script[^>]+src=["']([^"']+)["'][^>]*><\/script>/g, (tag, src) => {
+  const name = path.basename(src);
+  if (skip.has(name)) {
+    inlined.push(name + ' (пропущен)');
+    return '<!-- ' + name + ' skipped for android -->';
+  }
+  inlined.push(name);
+  return '<script>\n' + toEs5(fs.readFileSync(path.join(srcDir, name), 'utf8')) + '\n  </script>';
+});
+
+if (out.includes('rel="stylesheet"') || /<script[^>]+src=/.test(out)) {
   console.error('ОШИБКА: остались внешние ссылки на css/js');
   process.exit(1);
 }
-// Контроль: стрелок и for..of в собранном коде быть не должно
-const scriptBlock = out.slice(out.indexOf('<script>'));
+
+// Проверка: в собранном коде не должно остаться ES6
+const firstScript = out.indexOf('<script>');
+const scriptBlock = out.slice(firstScript);
 const arrows = (scriptBlock.match(/=>/g) || []).length;
 const forOf = (scriptBlock.match(/for\s*\((?:const|let|var)\s+[\w\s,{}\[\]:]+\s+of\s/g) || []).length;
 if (arrows > 0 || forOf > 0) {
@@ -113,7 +121,8 @@ if (arrows > 0 || forOf > 0) {
 
 fs.mkdirSync(path.dirname(outFile), { recursive: true });
 fs.writeFileSync(outFile, out, 'utf8');
+
 console.log('собрано: ' + outFile);
+console.log('  встроено: ' + inlined.join(', '));
 console.log('  размер: ' + (fs.statSync(outFile).size / 1024).toFixed(1) + ' КБ');
-console.log('  стрелок в ES5-сборке: ' + arrows + ', for..of: ' + forOf);
-console.log('  внешних запросов: 0, один файл');
+console.log('  ES5: стрелок ' + arrows + ', for..of ' + forOf + ', внешних запросов 0');

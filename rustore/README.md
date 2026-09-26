@@ -1,42 +1,60 @@
-# Публикация NEON//BASTION в Rustore
+# Публикация игр в RuStore
+
+Здесь две готовые сборки под Android: башенная оборона и аркада-выживание.
 
 ## Файлы
 
 | Файл | Назначение |
 |---|---|
-| `NEON-BASTION-1.0.0.apk` | Подписанная сборка для загрузки |
-| `bastion-release.keystore` | Ключ подписи — **сохранить**, без него нельзя выпустить обновление |
+| `NEON-BASTION-1.0.0.apk` | NEON//BASTION, башенная оборона |
+| `NEON-COURIER-1.0.0.apk` | NEON//COURIER, аркада на выживание |
+| `bastion-release.keystore` | Ключ подписи BASTION — **сохранить** |
+| `courier-release.keystore` | Ключ подписи COURIER — **сохранить** |
 | `MainActivity.java` | Обёртка WebView |
 | `AndroidManifest.xml` | Манифест |
-| `build-apk.ps1` | Сборка в шесть шагов без Gradle |
-| `build-apk-bundle.js` | Сборка игры в один ES5-файл для assets |
+| `build-bundle.js` | Сборка любой игры в один ES5-файл для assets |
+| `build-apk.ps1` | Сборка BASTION в шесть шагов без Gradle |
+| `build-apk-courier.ps1` | Сборка COURIER, то же самое |
 
-Пароль от keystore: `bastion2026`, alias: `bastion`.
+Ключи подписи лежат рядом со скриптами, а не во временной папке сборки.
+В RuStore смена ключа запрещена: обновление, подписанное другим ключом,
+не примут. **Сделайте резервные копии обоих файлов.**
+
+| Игра | Пароль | alias |
+|---|---|---|
+| BASTION | `bastion2026` | `bastion` |
+| COURIER | `courier2026` | `courier` |
 
 Параметры пакета:
 
 ```text
+NEON//BASTION
 package       com.teivrim.bastion
-versionName   1.0.0
-versionCode   1
-minSdk        21 (Android 5.0)
-targetSdk     34 (Android 14)
 label         NEON//BASTION
 orientation   sensorLandscape
 размер APK    144230 байт (0.14 МБ)
 SHA-256       c016b774a24e9ae24ffb4d71a6fa6fe9d3e117e65f3a9689542cfbf481f0b2e6
+сертификат    ff357c97f21f5f55d721e019c5e0a4557bab00d674b3594a42e65848144f4eef
+
+NEON//COURIER
+package       com.teivrim.courier
+label         NEON//COURIER
+orientation   portrait
+размер APK    86886 байт (0.08 МБ)
+SHA-256       411f8455c45d12c88e3becd38be34c089aab29c0d6122e5b9f2e1ee7de22ea56
 ```
 
-Подпись: сертификат `CN=NEON BASTION, OU=Teivrim, O=Teivrim, C=RU`,
-SHA-256 `ff357c97f21f5f55d721e019c5e0a4557bab00d674b3594a42e65848144f4eef`.
+У обеих: `versionName 1.0.0`, `versionCode 1`,
+`minSdk 21` (Android 5.0), `targetSdk 34` (Android 14).
 
-## Требования Rustore
+## Требования RuStore
 
-- нет зависимостей от Google Play Services — выполнено, в APK нет ни одного разрешения;
-- игра полностью офлайн, работает без интернета;
-- подпись ключом выше;
-- минимальная иконка 512×512 — `bastion-assets/icon.png`;
-- скриншоты — `bastion-assets/screenshot-01.png`.
+- нет зависимостей от Google Play Services — в обоих APK ноль разрешений,
+  ноль сервисов и провайдеров, Google-зависимостей не найдено;
+- игры полностью офлайн, работают без интернета;
+- подписаны ключами из таблицы выше;
+- иконка 512×512 — `bastion-assets/icon.png` и `yandex-assets/icon.png`;
+- скриншоты — `bastion-assets/screenshot-01.png` и `yandex-assets/screenshot-01.png`.
 
 ## Данные карточки
 
@@ -81,6 +99,45 @@ NEON//BASTION — неоновый башенный оборонец на 30 в�
 
 **Лицензия:** проприетарная, все права принадлежат Teivrim.
 
+## Данные карточки: NEON//COURIER
+
+**Название:** NEON//COURIER
+
+**Краткое описание:** Аркада на выживание в стиле ретрофутуризма.
+
+**Полное описание:**
+
+```
+NEON//COURIER — неоновая аркада на выживание.
+
+Забирай энергетические ячейки, уходи от дронов и охотников и продержись
+как можно дольше. Чем дольше смена, тем больше очков и кредитов.
+
+ЧТО В ИГРЕ
+• Энергетические ячейки и комбо
+• Дроны и охотники, которые телеграфируют атаку
+• Рывок: уклонение и урон одновременно
+• Щит, ремонт и режим Overdrive
+• Локальный рекорд и экран результатов
+
+УПРАВЛЕНИЕ
+• WASD или стрелки — движение
+• Space или Shift — рывок
+• Esc — пауза
+• На телефоне: джойстик слева, кнопка рывка справа
+
+ПРОГРЕССИЯ
+Кредиты за завершённые смены тратятся в постоянном магазине: бронекорпус,
+ускоритель рывка, магнит и комбо-ядро. Прогресс сохраняется на устройстве.
+Есть ежедневный бонус снабжения.
+```
+
+**Категория:** Игры → Аркады
+
+**Что нового:** Первая версия.
+
+**Возрастной рейтинг:** 3+ (для всех возрастов)
+
 ## Сборка
 
 Исходники Android-обёртки лежат во временной папке. Сборка состоит из шести
@@ -94,10 +151,12 @@ RuStore смена ключа запрещена, и обновление, по�
 ```bash
 # 1. собрать игру в один ES5-файл для assets
 npm install @babel/core @babel/cli @babel/preset-env
-node build-apk-bundle.js ../neon-bastion assets/index.html
+node build-bundle.js ../neon-bastion assets/index.html
+node build-bundle.js .. assets/index.html yandex-sdk.js   # COURIER, без Yandex SDK
 
 # 2. собрать и подписать APK
 powershell -ExecutionPolicy Bypass -File build-apk.ps1
+powershell -ExecutionPolicy Bypass -File build-apk-courier.ps1
 ```
 
 Игра в APK лежит одним файлом `assets/index.html` со встроенными CSS и JS,
@@ -110,9 +169,9 @@ minSdk 21 — это Android 5.0 с системным WebView на Chrome 37, �
 На российских устройствах без Google-сервисов WebView часто остаётся старым,
 и обычная сборка падала бы с SyntaxError прямо на запуске.
 
-Поэтому `build-apk-bundle.js` транспилирует `game.js` через Babel в ES5 и
-добавляет polyfill для `Number.isFinite`, `padStart`, `Array.includes`,
-`Object.assign`, `Math.trunc`, `Map` и `Set`. Скрипт падает с ошибкой, если
-после сборки остались стрелки или внешние ссылки на отдельные файлы.
+Поэтому `build-bundle.js` транспилирует JS через Babel в ES5 и добавляет
+polyfill для `Number.isFinite`, `padStart`, `Array.includes`, `Object.assign`,
+`Math.trunc`, `Map` и `Set`. Скрипт падает с ошибкой, если после сборки
+остались стрелки или внешние ссылки на отдельные файлы.
 
 Веб-версия на itch.io остаётся на современном JS — там старых движков нет.
